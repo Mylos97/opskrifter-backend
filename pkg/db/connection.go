@@ -3,14 +3,20 @@ package db
 import (
 	"database/sql"
 	"log"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var DB *sql.DB
 
-func Init() {
+func Init(inMemory bool) {
 	var err error
-	DB, err = sql.Open("sqlite3", "./app.db")
+	dsn := "./app.db"
+	if inMemory {
+		dsn = ":memory:"
+	}
+
+	DB, err = sql.Open("sqlite3", dsn)
 	if err != nil {
 		log.Fatal(err)
 	}

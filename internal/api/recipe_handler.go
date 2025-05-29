@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
-	"github.com/go-chi/chi/v5"
-	"opskrifter-backend/pkg/db"
 	"opskrifter-backend/internal/types"
+	"opskrifter-backend/pkg/db"
+
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
@@ -70,7 +71,6 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Make sure the ID in URL matches ID in JSON body (optional)
 	if rec.ID != "" && rec.ID != id {
 		http.Error(w, "ID in URL and body do not match", http.StatusBadRequest)
 		return
