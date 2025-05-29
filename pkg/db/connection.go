@@ -27,13 +27,12 @@ func createTables() {
 		`CREATE TABLE IF NOT EXISTS users (
 			id TEXT,
 			name TEXT,
-			createdAt TEXT,
+			createdAt TEXT
 		);`,
 		`CREATE TABLE IF NOT EXISTS recipes (
 			id TEXT PRIMARY KEY,
 			name TEXT,
 			minutes INTEGER,
-			rating REAL,
 			description TEXT,
 			likes INTEGER,
 			comments INTEGER,
@@ -55,7 +54,7 @@ func createTables() {
     	amount TEXT NOT NULL,
     	FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
     	FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE,
-    	UNIQUE(recipe_id, ingredient_id)  -- one entry per ingredient per recipe
+    	UNIQUE(recipe_id, ingredient_id)
 		);`,
 		`CREATE TABLE IF NOT EXISTS recipe_categories (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,

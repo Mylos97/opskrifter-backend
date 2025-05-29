@@ -10,7 +10,6 @@ func RegisterRoutes(r *chi.Mux) {
 		w.Write([]byte("OK"))
 	})
 
-	// Add your other route registrations here, e.g.:
 	r.Route("/recipes", func(r chi.Router) {
 		r.Post("/", CreateRecipe)
 		r.Get("/{id}", GetRecipe)

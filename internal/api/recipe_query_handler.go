@@ -28,14 +28,14 @@ func GetRecipesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	validSorts := map[string]bool{"name": true, "rating": true, "minutes": true}
+	validSorts := map[string]bool{"name": true, "minutes": true}
 	if val := query.Get("sort"); val != "" {
 		if validSorts[val] {
 			sort = val
 		}
 	}
 
-	queryStr := fmt.Sprintf(`SELECT id, name, minutes, rating, description, likes, comments, image 
+	queryStr := fmt.Sprintf(`SELECT id, name, minutes, description, likes, comments, image 
 							 FROM recipes 
 							 ORDER BY %s 
 							 LIMIT ? OFFSET ?`, sort)
@@ -51,7 +51,7 @@ func GetRecipesHandler(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var rec types.Recipe
-		err := rows.Scan(&rec.ID, &rec.Name, &rec.Minutes, &rec.Rating, &rec.Description, &rec.Likes, &rec.Comments, &rec.Image)
+		err := rows.Scan(&rec.ID, &rec.Name, &rec.Minutes, &rec.Description, &rec.Likes, &rec.Comments, &rec.Image)
 		if err != nil {
 			http.Error(w, "Failed to scan recipe: "+err.Error(), http.StatusInternalServerError)
 			return
