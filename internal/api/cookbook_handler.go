@@ -4,14 +4,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"opskrifter-backend/pkg/db"
 	"opskrifter-backend/internal/types"
 )
 
-// CreateCookBook handles POST /cookbooks
+// POST /cookbooks/{id}
 func CreateCookBook(w http.ResponseWriter, r *http.Request) {
 	var cb types.CookBook
 	if err := json.NewDecoder(r.Body).Decode(&cb); err != nil {
@@ -34,7 +33,7 @@ func CreateCookBook(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, cb)
 }
 
-// GetCookBook handles GET /cookbooks/{id}
+// GET /cookbooks/{id}
 func GetCookBook(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -55,7 +54,7 @@ func GetCookBook(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, cb)
 }
 
-// UpdateCookBook handles PUT /cookbooks/{id}
+// PUT /cookbooks/{id}
 func UpdateCookBook(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	var cb types.CookBook
@@ -83,7 +82,7 @@ func UpdateCookBook(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, cb)
 }
 
-// DeleteCookBook handles DELETE /cookbooks/{id}
+// DELETE /cookbooks/{id}
 func DeleteCookBook(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 

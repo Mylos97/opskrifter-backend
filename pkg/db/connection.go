@@ -20,6 +20,15 @@ func Init() {
 
 func createTables() {
 	queries := []string{
+		`CREATE TABLE IF NOT EXISTS recipe_cuisines (
+			id TEXT PRIMARY KEY,
+			name TEXT
+		);`,
+		`CREATE TABLE IF NOT EXISTS users (
+			id TEXT,
+			name TEXT,
+			createdAt TEXT,
+		);`,
 		`CREATE TABLE IF NOT EXISTS recipes (
 			id TEXT PRIMARY KEY,
 			name TEXT,
@@ -28,15 +37,25 @@ func createTables() {
 			description TEXT,
 			likes INTEGER,
 			comments INTEGER,
-			image TEXT
+			image TEXT,
+			recipe_cuisine TEXT,
+			user TEXT,
+			FOREIGN KEY (recipe_cuisine) REFERENCES recipe_cuisines(id) ON DELETE SET NULL
+			FOREIGN KEY (user) REFERENCES users(id) ON DELETE SET NULL
 		);`,
 		`CREATE TABLE IF NOT EXISTS ingredients (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			recipe_id TEXT,
-			name TEXT,
-			quantity REAL,
-			unit TEXT,
-			FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+    	id INTEGER PRIMARY KEY AUTOINCREMENT,
+    	name TEXT NOT NULL UNIQUE,
+    	unit TEXT NOT NULL
+		);`,
+		`CREATE TABLE IF NOT EXISTS ingredient_amounts (
+    	id INTEGER PRIMARY KEY AUTOINCREMENT,
+    	recipe_id TEXT NOT NULL,
+    	ingredient_id INTEGER NOT NULL,
+    	amount TEXT NOT NULL,
+    	FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
+    	FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE,
+    	UNIQUE(recipe_id, ingredient_id)  -- one entry per ingredient per recipe
 		);`,
 		`CREATE TABLE IF NOT EXISTS recipe_categories (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,15 +63,13 @@ func createTables() {
 			name TEXT,
 			FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
 		);`,
-		`CREATE TABLE IF NOT EXISTS recipe_cuisines (
-			id TEXT PRIMARY KEY,
-			name TEXT
-		);`,
 		`CREATE TABLE IF NOT EXISTS cookbooks (
 			id TEXT PRIMARY KEY,
 			name TEXT,
 			description TEXT,
-			likes INTEGER
+			likes INTEGER,
+			user TEXT,
+			FOREIGN KEY (user) REFERENCES users(id) ON DELETE SET NULL
 		);`,
 		`CREATE TABLE IF NOT EXISTS cookbook_recipes (
 			cookbook_id TEXT,
