@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"opskrifter-backend/internal/types"
+	"opskrifter-backend/pkg/db"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"opskrifter-backend/pkg/db"
-	"opskrifter-backend/internal/types"
 )
 
 // POST /cookbooks/{id}
@@ -21,9 +22,9 @@ func CreateCookBook(w http.ResponseWriter, r *http.Request) {
 	cb.ID = uuid.New().String()
 
 	_, err := db.DB.Exec(`
-		INSERT INTO cookbooks (id, name, description, likes, creator)
+		INSERT INTO cookbooks (id, name, description, likes, user)
 		VALUES (?, ?, ?, ?, ?)`,
-		cb.ID, cb.Name, cb.Description, cb.Likes, cb.Creator)
+		cb.ID, cb.Name, cb.Description, cb.Likes, cb.User)
 
 	if err != nil {
 		http.Error(w, "Failed to insert cookbook: "+err.Error(), http.StatusInternalServerError)
@@ -38,11 +39,11 @@ func GetCookBook(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	row := db.DB.QueryRow(`
-		SELECT id, name, description, likes, creator
+		SELECT id, name, description, likes, user
 		FROM cookbooks WHERE id = ?`, id)
 
 	var cb types.CookBook
-	err := row.Scan(&cb.ID, &cb.Name, &cb.Description, &cb.Likes, &cb.Creator)
+	err := row.Scan(&cb.ID, &cb.Name, &cb.Description, &cb.Likes, &cb.User)
 	if err == sql.ErrNoRows {
 		http.Error(w, "Cookbook not found", http.StatusNotFound)
 		return
@@ -70,9 +71,9 @@ func UpdateCookBook(w http.ResponseWriter, r *http.Request) {
 	cb.ID = id
 
 	_, err := db.DB.Exec(`
-		UPDATE cookbooks SET name=?, description=?, likes=?, creator=?
+		UPDATE cookbooks SET name=?, description=?, likes=?, user=?
 		WHERE id=?`,
-		cb.Name, cb.Description, cb.Likes, cb.Creator, cb.ID)
+		cb.Name, cb.Description, cb.Likes, cb.User, cb.ID)
 
 	if err != nil {
 		http.Error(w, "Failed to update cookbook: "+err.Error(), http.StatusInternalServerError)
