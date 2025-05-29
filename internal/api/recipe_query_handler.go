@@ -9,7 +9,7 @@ import (
 	"opskrifter-backend/internal/types"
 )
 
-func getRecipesHandler(w http.ResponseWriter, r *http.Request) {
+func GetRecipesHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 
 	index := 0

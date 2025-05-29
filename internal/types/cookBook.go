@@ -6,4 +6,5 @@ type CookBook struct {
 	Description string   `json:"description"`
 	Likes       int      `json:"likes"`
 	Recipes     []Recipe `json:"recipes"`
+	Creator     string   `json:"creator"`
 }

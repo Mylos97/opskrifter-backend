@@ -5,14 +5,24 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// RegisterRoutes registers all API routes on the router.
 func RegisterRoutes(r *chi.Mux) {
-	// Example route, replace or add your actual routes
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
 
 	// Add your other route registrations here, e.g.:
-	//r.Route("/recipes", func(r chi.Router) { ... })
-	// r.Route("/cookbooks", func(r chi.Router) { ... })
+	r.Route("/recipes", func(r chi.Router) {
+		r.Post("/", CreateRecipe)
+		r.Get("/{id}", GetRecipe)
+		r.Put("/{id}", UpdateRecipe)
+		r.Delete("/{id}", DeleteRecipe)
+		r.Get("/", GetRecipesHandler)
+	 })
+
+	r.Route("/cookbooks", func(r chi.Router) { 
+		r.Post("/", CreateCookBook)
+		r.Get("/{id}", GetCookBook)
+		r.Put("/{id}", UpdateCookBook)
+		r.Delete("/{id}", DeleteCookBook)
+ })
 }
