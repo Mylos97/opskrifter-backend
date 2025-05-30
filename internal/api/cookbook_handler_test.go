@@ -76,7 +76,7 @@ func TestCreateCookBook(t *testing.T) {
 
 func TestGetCookbook(t *testing.T) {
 	var cookBookID = testCookBook.ID
-	setupTestRecipe(t)
+	setupTestCookBook(t)
 	req := httptest.NewRequest(http.MethodGet, "/recipes/"+cookBookID, nil)
 	w := httptest.NewRecorder()
 	ctx := chi.NewRouteContext()
@@ -86,6 +86,7 @@ func TestGetCookbook(t *testing.T) {
 	GetCookBook(w, req)
 
 	res := w.Result()
+	LogAndResetBody(t, res)
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
@@ -102,7 +103,7 @@ func TestGetCookbook(t *testing.T) {
 	}
 }
 
-func TestUpdatCookBook(t *testing.T) {
+func TestUpdateCookBook(t *testing.T) {
 	cookBookID := testCookBook.ID
 	var updatedName = "Updated CookBook Name"
 	updatedCookBook := testCookBook
