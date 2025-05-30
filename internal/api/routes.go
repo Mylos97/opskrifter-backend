@@ -33,4 +33,11 @@ func RegisterRoutes(r *chi.Mux) {
 		r.Delete("/{id}", DeleteComment)
 	})
 
+	r.Route("/users", func(r chi.Router) {
+		r.Post("/", CreateUser)
+		r.Get("/{id}", GetUser)
+		r.Put("/{id}", UpdateUser)
+		r.Delete("/{id}", DeleteUser)
+	})
+
 }

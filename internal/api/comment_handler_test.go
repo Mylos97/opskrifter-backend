@@ -12,13 +12,7 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 )
-
-var testUser = types.User{
-	ID:   uuid.New().String(),
-	Name: "test-user",
-}
 
 var testComment = types.Comment{
 	Recipe:  testRecipe,
@@ -31,6 +25,7 @@ func setupTestComment(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to clean test comment: %v", err)
 	}
+	insertTestUser(t)
 	insertTestComment(t)
 }
 
