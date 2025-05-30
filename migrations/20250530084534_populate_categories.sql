@@ -1,0 +1,46 @@
+-- +goose Up
+INSERT INTO categories (name) VALUES
+('Forretter'),
+('Hovedretter'),
+('Desserter'),
+('Salater'),
+('Supper'),
+('Børnevenlig'),
+('Hurtig mad'),
+('Vegetarisk'),
+('Vegansk'),
+('Glutenfri'),
+('Laktosefri'),
+('Gryderetter'),
+('Bagværk'),
+('Frokost'),
+('Morgenmad'),
+('Snacks'),
+('Grill'),
+('Jul'),
+('Påske'),
+('Sommermad');
+
+-- +goose Down
+DELETE FROM categories WHERE name IN (
+  'Forretter',
+  'Hovedretter',
+  'Desserter',
+  'Salater',
+  'Supper',
+  'Børnevenlig',
+  'Hurtig mad',
+  'Vegetarisk',
+  'Vegansk',
+  'Glutenfri',
+  'Laktosefri',
+  'Gryderetter',
+  'Bagværk',
+  'Frokost',
+  'Morgenmad',
+  'Snacks',
+  'Grill',
+  'Jul',
+  'Påske',
+  'Sommermad'
+);

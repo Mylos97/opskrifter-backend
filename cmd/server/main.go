@@ -15,7 +15,6 @@ func main() {
 	db.Init(false)
 
 	r := chi.NewRouter()
-	//r.Use(middleware.GoogleAuthMiddleware("YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"))
 	api.RegisterRoutes(r)
 
 	log.Println("API server running on http://localhost:8080")
