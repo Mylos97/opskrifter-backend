@@ -3,6 +3,8 @@ package middleware
 import (
 	"net/http"
 	"os"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func APIKeyAuth(next http.Handler) http.Handler {

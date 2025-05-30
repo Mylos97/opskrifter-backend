@@ -26,6 +26,7 @@ require (
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.2 // indirect
+	github.com/joho/godotenv v1.5.1
 	github.com/pressly/goose v2.7.0+incompatible
 	github.com/pressly/goose/v3 v3.24.3
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
