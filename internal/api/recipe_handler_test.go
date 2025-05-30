@@ -14,6 +14,10 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+var testIngredient = types.Ingredient{
+	Name: "Tomat",
+}
+
 var testRecipe = types.Recipe{
 	ID:          "test-id-123",
 	Name:        "Test Recipe",
@@ -22,8 +26,13 @@ var testRecipe = types.Recipe{
 	Likes:       0,
 	Comments:    0,
 	Image:       "http://example.com/image.jpg",
-	Ingredients: []types.IngredientAmount{},
-	Categories:  []types.RecipeCategory{},
+	Ingredients: []types.IngredientAmount{
+		{
+			Ingredient: testIngredient,
+			Amount:     "2 stk",
+		},
+	},
+	Categories: []types.RecipeCategory{},
 	RecipeCuisine: types.RecipeCuisine{
 		ID:   "it",
 		Name: "Italian",
@@ -79,7 +88,9 @@ func TestCreateRecipe(t *testing.T) {
 
 	res := w.Result()
 	defer res.Body.Close()
-
+	bodyBytes, _ := io.ReadAll(res.Body)
+	t.Logf("Response body: %s", string(bodyBytes))
+	res.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 	if res.StatusCode != http.StatusCreated {
 		t.Errorf("expected status 201 Created, got %d", res.StatusCode)
 	}

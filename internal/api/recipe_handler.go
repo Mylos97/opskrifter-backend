@@ -29,13 +29,38 @@ func CreateRecipe(w http.ResponseWriter, r *http.Request) {
 
 	rec.ID = uuid.New().String()
 
-	_, err := db.DB.Exec(`
+	tx, err := db.DB.Begin()
+	if err != nil {
+		http.Error(w, "Failed to start transaction: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = tx.Exec(`
 		INSERT INTO recipes (id, name, minutes, description, likes, comments, image)
 		VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		rec.ID, rec.Name, rec.Minutes, rec.Description, rec.Likes, rec.Comments, rec.Image)
 
 	if err != nil {
+		tx.Rollback()
 		http.Error(w, "Failed to insert recipe: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	for _, ing := range rec.Ingredients {
+		_, err := tx.Exec(`
+			INSERT INTO ingredient_amounts (recipe_id, ingredient_id, amount)
+			VALUES (?, ?, ?)`,
+			rec.ID, ing.Ingredient.ID, ing.Amount)
+
+		if err != nil {
+			tx.Rollback()
+			http.Error(w, "Failed to insert ingredients: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "Failed to commit transaction: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -71,7 +96,7 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var ing types.IngredientAmount
-		if err := rows.Scan(&ing.ID, &ing.Ingredient, &ing.Quantity); err != nil {
+		if err := rows.Scan(&ing.ID, &ing.Ingredient, &ing.Amount); err != nil {
 			log.Printf("Failed to scan ingredient: %v", err)
 			continue
 		}
@@ -94,16 +119,49 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "ID in URL and body do not match", http.StatusBadRequest)
 		return
 	}
-
 	rec.ID = id
 
-	_, err := db.DB.Exec(`
+	tx, err := db.DB.Begin()
+	if err != nil {
+		http.Error(w, "Failed to start transaction: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	// Update the recipe itself
+	_, err = tx.Exec(`
 		UPDATE recipes SET name=?, minutes=?, description=?, likes=?, comments=?, image=?
 		WHERE id=?`,
 		rec.Name, rec.Minutes, rec.Description, rec.Likes, rec.Comments, rec.Image, rec.ID)
-
 	if err != nil {
 		http.Error(w, "Failed to update recipe: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Delete existing ingredients for the recipe
+	_, err = tx.Exec(`DELETE FROM ingredient_amounts WHERE recipe_id = ?`, rec.ID)
+	if err != nil {
+		http.Error(w, "Failed to delete existing ingredients: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Insert new ingredients
+	stmt, err := tx.Prepare(`INSERT INTO ingredient_amounts (recipe_id, ingredient_id, amount) VALUES (?, ?, ?)`)
+	if err != nil {
+		http.Error(w, "Failed to prepare ingredient insert: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer stmt.Close()
+
+	for _, ing := range rec.Ingredients {
+		if _, err := stmt.Exec(rec.ID, ing.Ingredient.ID, ing.Amount); err != nil {
+			http.Error(w, "Failed to insert ingredient: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "Failed to commit transaction: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
