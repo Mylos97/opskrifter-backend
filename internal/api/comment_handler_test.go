@@ -15,75 +15,75 @@ import (
 	"github.com/google/uuid"
 )
 
-var testCookBook = types.CookBook{
-	ID:          uuid.New().String(),
-	Name:        "Test CookBook",
-	Description: "Test cookbook description",
-	Likes:       5,
-	User:        "test-user-123",
-	Recipes:     []types.Recipe{testRecipe},
+var testUser = types.User{
+	ID:   uuid.New().String(),
+	Name: "test-user",
 }
 
-func setupTestCookBook(t *testing.T) {
-	_, err := db.DB.Exec("DELETE FROM cookbooks WHERE id = ?", testCookBook.ID)
+var testComment = types.Comment{
+	Recipe:  testRecipe,
+	User:    testUser,
+	Comment: "testcomment",
+}
+
+func setupTestComment(t *testing.T) {
+	_, err := db.DB.Exec("DELETE FROM comments WHERE id = ?", testComment.ID)
 	if err != nil {
-		t.Fatalf("failed to clean test recipe: %v", err)
+		t.Fatalf("failed to clean test comment: %v", err)
 	}
-	insertTestCookBook(t, testCookBook)
+	insertTestComment(t)
 }
 
-func insertTestCookBook(t *testing.T, cookbook types.CookBook) {
-
+func insertTestComment(t *testing.T) {
 	_, err := db.DB.Exec(`
-        INSERT INTO cookbooks (id, name, description, likes, user)
-        VALUES (?, ?, ?, ?, ?)`,
-		cookbook.ID, cookbook.Name, cookbook.Description, cookbook.Likes, cookbook.User,
-	)
+        INSERT INTO comments (recipe_id, user_id, comment)
+        VALUES (?, ?, ?)`,
+		testComment.Recipe.ID, testUser.ID, testComment.Comment)
 	if err != nil {
-		t.Fatalf("failed to insert test recipe: %v", err)
+		t.Fatalf("failed to insert test comment: %v", err)
 	}
 }
 
-func TestCreateCookBook(t *testing.T) {
-	setupTestCookBook(t)
-	payload, err := json.Marshal(testCookBook)
+func TestCreateComment(t *testing.T) {
+	setupTestComment(t)
+	payload, err := json.Marshal(testComment)
 	if err != nil {
-		t.Fatalf("failed to marshal recipe: %v", err)
+		t.Fatalf("failed to marshal comment: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodPost, "/cookbooks", bytes.NewReader(payload))
+	req := httptest.NewRequest(http.MethodPost, "/comments", bytes.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	CreateCookBook(w, req)
+	CreateComment(w, req)
 
 	res := w.Result()
 	defer res.Body.Close()
-
+	LogAndResetBody(t, res)
 	if res.StatusCode != http.StatusCreated {
 		t.Errorf("expected status 201 Created, got %d", res.StatusCode)
 	}
 
-	var createdCookBook types.CookBook
-	if err := json.NewDecoder(res.Body).Decode(&createdCookBook); err != nil {
+	var createdComment types.Comment
+	if err := json.NewDecoder(res.Body).Decode(&createdComment); err != nil {
 		t.Fatalf("failed to decode response: %v", err)
 	}
 
-	if createdCookBook.Name != testCookBook.Name {
-		t.Errorf("expected recipe name 'Test Recipe', got '%s'", createdCookBook.Name)
+	if createdComment.Comment != testComment.Comment {
+		t.Errorf("expected Comment name 'Test Recipe', got '%s'", createdComment.Comment)
 	}
 }
 
-func TestGetCookbook(t *testing.T) {
-	var cookBookID = testCookBook.ID
-	setupTestCookBook(t)
-	req := httptest.NewRequest(http.MethodGet, "/cookbooks/"+cookBookID, nil)
+func TestGetComments(t *testing.T) {
+	var recipeID = testRecipe.ID
+	setupTestComment(t)
+	req := httptest.NewRequest(http.MethodGet, "/comments/"+testRecipe.ID, nil)
 	w := httptest.NewRecorder()
 	ctx := chi.NewRouteContext()
-	ctx.URLParams.Add("id", cookBookID)
+	ctx.URLParams.Add("recipe_id", recipeID)
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, ctx))
 
-	GetCookBook(w, req)
+	GetComments(w, req)
 
 	res := w.Result()
 	LogAndResetBody(t, res)
@@ -93,17 +93,17 @@ func TestGetCookbook(t *testing.T) {
 		t.Errorf("expected status 200 OK, got %d", res.StatusCode)
 	}
 
-	var rec types.Recipe
+	var rec []types.Comment
 	if err := json.NewDecoder(res.Body).Decode(&rec); err != nil {
 		t.Fatalf("failed to decode response: %v", err)
 	}
 
-	if rec.ID != cookBookID {
-		t.Errorf("expected recipe id '%s', got '%s'", cookBookID, rec.ID)
+	if len(rec) < 1 {
+		t.Errorf("Expected 1 comment")
 	}
 }
 
-func TestUpdateCookBook(t *testing.T) {
+func TestUpdateComment(t *testing.T) {
 	cookBookID := testCookBook.ID
 	var updatedName = "Updated CookBook Name"
 	updatedCookBook := testCookBook
@@ -114,7 +114,7 @@ func TestUpdateCookBook(t *testing.T) {
 		t.Fatalf("failed to marshal updated recipe: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodPut, "/cookbooks/"+cookBookID, bytes.NewReader(payload))
+	req := httptest.NewRequest(http.MethodPut, "/recipes/"+cookBookID, bytes.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
@@ -145,10 +145,10 @@ func TestUpdateCookBook(t *testing.T) {
 	}
 }
 
-func TestDeleteCookBook(t *testing.T) {
+func TestDeleteComment(t *testing.T) {
 	cookBookID := testCookBook.ID
 
-	req := httptest.NewRequest(http.MethodDelete, "/cookbooks/"+cookBookID, nil)
+	req := httptest.NewRequest(http.MethodDelete, "/recipes/"+cookBookID, nil)
 	w := httptest.NewRecorder()
 
 	DeleteCookBook(w, req)
@@ -160,7 +160,7 @@ func TestDeleteCookBook(t *testing.T) {
 		t.Errorf("expected status 204 No Content, got %d", res.StatusCode)
 	}
 
-	reqGet := httptest.NewRequest(http.MethodGet, "/cookbooks/"+cookBookID, nil)
+	reqGet := httptest.NewRequest(http.MethodGet, "/recipes/"+cookBookID, nil)
 	wGet := httptest.NewRecorder()
 	GetRecipe(wGet, reqGet)
 	resGet := wGet.Result()

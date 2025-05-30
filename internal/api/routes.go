@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+
 	"github.com/go-chi/chi/v5"
 )
 
@@ -16,12 +17,20 @@ func RegisterRoutes(r *chi.Mux) {
 		r.Put("/{id}", UpdateRecipe)
 		r.Delete("/{id}", DeleteRecipe)
 		r.Get("/", GetRecipesHandler)
-	 })
+	})
 
-	r.Route("/cookbooks", func(r chi.Router) { 
+	r.Route("/cookbooks", func(r chi.Router) {
 		r.Post("/", CreateCookBook)
 		r.Get("/{id}", GetCookBook)
 		r.Put("/{id}", UpdateCookBook)
 		r.Delete("/{id}", DeleteCookBook)
- })
+	})
+
+	r.Route("/comments", func(r chi.Router) {
+		r.Post("/", CreateComment)
+		r.Get("/{recipe_id}", GetComments)
+		r.Put("/{id}", UpdateComment)
+		r.Delete("/{id}", DeleteComment)
+	})
+
 }
