@@ -56,8 +56,15 @@ func Init(inMemory bool) {
 		log.Fatalf("migrations directory does not exist: %s", migrationsDir)
 	}
 
-	if err := goose.Up(DB, migrationsDir); err != nil {
-		log.Fatalf("failed to run migrations: %v", err)
+	schemaDir := filepath.Join(packageRoot, "migrations", "schema")
+	if err := goose.Up(DB, schemaDir); err != nil {
+		log.Fatalf("failed to run schema migrations: %v", err)
 	}
 
+	if !inMemory {
+		dataDir := filepath.Join(packageRoot, "migrations", "data")
+		if err := goose.Up(DB, dataDir); err != nil {
+			log.Fatalf("failed to run migrations: %v", err)
+		}
+	}
 }
