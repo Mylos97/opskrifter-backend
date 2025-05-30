@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"opskrifter-backend/internal/types"
 	"opskrifter-backend/pkg/db"
@@ -45,18 +46,36 @@ func CreateRecipe(w http.ResponseWriter, r *http.Request) {
 func GetRecipe(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	row := db.DB.QueryRow(`
+	rowRecipe := db.DB.QueryRow(`
 		SELECT id, name, minutes, description, likes, comments, image
 		FROM recipes WHERE id = ?`, id)
 
 	var rec types.Recipe
-	err := row.Scan(&rec.ID, &rec.Name, &rec.Minutes, &rec.Description, &rec.Likes, &rec.Comments, &rec.Image)
+	err := rowRecipe.Scan(&rec.ID, &rec.Name, &rec.Minutes, &rec.Description, &rec.Likes, &rec.Comments, &rec.Image)
+
 	if err == sql.ErrNoRows {
 		http.Error(w, "Recipe not found", http.StatusNotFound)
 		return
 	} else if err != nil {
 		http.Error(w, "DB error: "+err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	rows, err := db.DB.Query(`SELECT id, recipe_id, ingredient_id, amount FROM ingredient_amounts WHERE recipe_id = ?`, id)
+	if err != nil {
+		http.Error(w, "Failed to fetch ingredients: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var ing types.IngredientAmount
+		if err := rows.Scan(&ing.ID, &ing.Ingredient, &ing.Quantity); err != nil {
+			log.Printf("Failed to scan ingredient: %v", err)
+			continue
+		}
+		rec.Ingredients = append(rec.Ingredients, ing)
 	}
 
 	writeJSON(w, http.StatusOK, rec)

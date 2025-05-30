@@ -107,6 +107,9 @@ func TestGetRecipe(t *testing.T) {
 
 	res := w.Result()
 	defer res.Body.Close()
+	bodyBytes, _ := io.ReadAll(res.Body)
+	t.Logf("Response body: %s", string(bodyBytes))
+	res.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	if res.StatusCode != http.StatusOK {
 		t.Errorf("expected status 200 OK, got %d", res.StatusCode)
