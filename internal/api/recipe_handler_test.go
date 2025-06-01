@@ -34,7 +34,7 @@ var testRecipe = types.Recipe{
 	},
 	Categories: []types.RecipeCategory{},
 	RecipeCuisine: types.RecipeCuisine{
-		ID:   "it",
+		ID:   1,
 		Name: "Italian",
 	},
 	User: types.User{
@@ -64,7 +64,7 @@ func insertTestRecipe(t *testing.T, recipe types.Recipe) {
 	}
 
 	_, err := db.DB.Exec(`
-        INSERT INTO recipes (id, name, minutes, description, likes, comments, image, recipe_cuisine, user)
+        INSERT INTO recipes (id, name, minutes, description, likes, comments, image, recipe_cuisine, user_id)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		dbRec.ID, dbRec.Name, dbRec.Minutes, dbRec.Description,
 		dbRec.Likes, dbRec.Comments, dbRec.Image, dbRec.RecipeCuisine, dbRec.User)
@@ -74,7 +74,6 @@ func insertTestRecipe(t *testing.T, recipe types.Recipe) {
 }
 
 func TestCreateRecipe(t *testing.T) {
-	setupTestRecipe(t)
 	payload, err := json.Marshal(testRecipe)
 	if err != nil {
 		t.Fatalf("failed to marshal recipe: %v", err)
@@ -154,7 +153,7 @@ func TestUpdateRecipe(t *testing.T) {
 	ctx := chi.NewRouteContext()
 	ctx.URLParams.Add("id", recipeID)
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, ctx))
-
+	setupTestRecipe(t)
 	UpdateRecipe(w, req)
 
 	res := w.Result()
@@ -183,9 +182,8 @@ func TestDeleteRecipe(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodDelete, "/recipes/"+recipeID, nil)
 	w := httptest.NewRecorder()
-
+	setupTestRecipe(t)
 	DeleteRecipe(w, req)
-
 	res := w.Result()
 	defer res.Body.Close()
 

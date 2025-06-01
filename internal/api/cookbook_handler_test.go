@@ -45,7 +45,6 @@ func insertTestCookBook(t *testing.T, cookbook types.CookBook) {
 }
 
 func TestCreateCookBook(t *testing.T) {
-	setupTestCookBook(t)
 	payload, err := json.Marshal(testCookBook)
 	if err != nil {
 		t.Fatalf("failed to marshal recipe: %v", err)

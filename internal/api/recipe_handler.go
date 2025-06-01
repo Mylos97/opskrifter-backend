@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// Helper: write JSON response
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -36,9 +35,9 @@ func CreateRecipe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = tx.Exec(`
-		INSERT INTO recipes (id, name, minutes, description, likes, comments, image)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		rec.ID, rec.Name, rec.Minutes, rec.Description, rec.Likes, rec.Comments, rec.Image)
+		INSERT INTO recipes (id, name, minutes, description, likes, comments, image, user_id, recipe_cuisine)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		rec.ID, rec.Name, rec.Minutes, rec.Description, rec.Likes, rec.Comments, rec.Image, rec.User.ID, rec.RecipeCuisine.ID)
 
 	if err != nil {
 		tx.Rollback()

@@ -9,9 +9,9 @@ CREATE TABLE
     comments INTEGER DEFAULT 0,
     image TEXT NOT NULL,
     recipe_cuisine TEXT NOT NULL,
-    user TEXT NOT NULL,
+    user_id TEXT NOT NULL,
     FOREIGN KEY (recipe_cuisine) REFERENCES recipe_cuisines (id) ON DELETE SET NULL 
-    FOREIGN KEY (user) REFERENCES users (id) ON DELETE SET NULL
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
   );
 
 -- +goose Down

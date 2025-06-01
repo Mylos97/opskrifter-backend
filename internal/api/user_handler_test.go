@@ -23,10 +23,7 @@ var testUser = types.User{
 }
 
 func setupTestUser(t *testing.T) {
-	_, err := db.DB.Exec("DELETE FROM users WHERE id = ?", testUser.ID)
-	if err != nil {
-		t.Fatalf("failed to clean test user: %v", err)
-	}
+	deleteTestUser(t)
 	insertTestUser(t)
 	checkUserExists(t)
 }
@@ -38,6 +35,13 @@ func insertTestUser(t *testing.T) {
 		testUser.ID, testUser.Name, testUser.CreatedAt, testUser.Email)
 	if err != nil {
 		t.Fatalf("failed to insert test user: %v", err)
+	}
+}
+
+func deleteTestUser(t *testing.T) {
+	_, err := db.DB.Exec("DELETE FROM users WHERE id = ? OR email = ?", testUser.ID, testUser.Email)
+	if err != nil {
+		t.Fatalf("failed to clean test user: %v", err)
 	}
 }
 
@@ -58,7 +62,7 @@ func TestCreateUser(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/users", bytes.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
-
+	deleteTestUser(t)
 	CreateUser(w, req)
 
 	res := w.Result()

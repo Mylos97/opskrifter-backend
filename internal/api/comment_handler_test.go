@@ -25,7 +25,7 @@ func setupTestComment(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to clean test comment: %v", err)
 	}
-	insertTestUser(t)
+	setupTestUser(t)
 	insertTestComment(t)
 }
 
@@ -40,7 +40,6 @@ func insertTestComment(t *testing.T) {
 }
 
 func TestCreateComment(t *testing.T) {
-	setupTestComment(t)
 	payload, err := json.Marshal(testComment)
 	if err != nil {
 		t.Fatalf("failed to marshal comment: %v", err)
@@ -50,6 +49,7 @@ func TestCreateComment(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
+	setupTestComment(t)
 	CreateComment(w, req)
 
 	res := w.Result()
@@ -71,13 +71,13 @@ func TestCreateComment(t *testing.T) {
 
 func TestGetComments(t *testing.T) {
 	var recipeID = testRecipe.ID
-	setupTestComment(t)
 	req := httptest.NewRequest(http.MethodGet, "/comments/"+testRecipe.ID, nil)
 	w := httptest.NewRecorder()
 	ctx := chi.NewRouteContext()
 	ctx.URLParams.Add("recipe_id", recipeID)
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, ctx))
 
+	setupTestComment(t)
 	GetComments(w, req)
 
 	res := w.Result()
@@ -99,25 +99,25 @@ func TestGetComments(t *testing.T) {
 }
 
 func TestUpdateComment(t *testing.T) {
-	cookBookID := testCookBook.ID
-	var updatedName = "Updated CookBook Name"
-	updatedCookBook := testCookBook
-	updatedCookBook.Name = updatedName
+	commentID := testComment.ID
+	var updated = "Updated Comment"
+	updatedComment := testComment
+	updatedComment.Comment = updated
 
-	payload, err := json.Marshal(updatedCookBook)
+	payload, err := json.Marshal(updatedComment)
 	if err != nil {
 		t.Fatalf("failed to marshal updated recipe: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodPut, "/recipes/"+cookBookID, bytes.NewReader(payload))
+	req := httptest.NewRequest(http.MethodPut, "/comments/"+commentID, bytes.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
 	ctx := chi.NewRouteContext()
-	ctx.URLParams.Add("id", cookBookID)
+	ctx.URLParams.Add("id", commentID)
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, ctx))
 
-	UpdateCookBook(w, req)
+	UpdateComment(w, req)
 
 	res := w.Result()
 	defer res.Body.Close()
@@ -130,13 +130,13 @@ func TestUpdateComment(t *testing.T) {
 		t.Errorf("expected status 200 OK, got %d", res.StatusCode)
 	}
 
-	var rec types.Recipe
+	var rec types.Comment
 	if err := json.NewDecoder(res.Body).Decode(&rec); err != nil {
 		t.Fatalf("failed to decode response: %v", err)
 	}
 
-	if rec.Name != updatedName {
-		t.Errorf("expected updated recipe name '%s', got '%s'", updatedName, rec.Name)
+	if rec.Comment != updated {
+		t.Errorf("expected updated recipe name '%s', got '%s'", updated, rec.Comment)
 	}
 }
 

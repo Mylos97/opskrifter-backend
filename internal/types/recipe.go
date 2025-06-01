@@ -1,17 +1,17 @@
 package types
 
 type Recipe struct {
-	ID           string                 `json:"id"`
-	Name         string                 `json:"name"`
-	Minutes      int                    `json:"minutes"`
-	Description  string                 `json:"description"`
-	Likes        int                    `json:"likes"`
-	Comments     int                    `json:"comments"`
-	Image        string           			`json:"image"`
-	Ingredients  []IngredientAmount     `json:"ingredients"`
-	Categories   []RecipeCategory 			`json:"categories"`
-	RecipeCuisine RecipeCuisine   			`json:"recipeCuisine"`
-	User				 User										`json:"user"`
+	ID            string             `json:"id"`
+	Name          string             `json:"name"`
+	Minutes       int                `json:"minutes"`
+	Description   string             `json:"description"`
+	Likes         int                `json:"likes"`
+	Comments      int                `json:"comments"`
+	Image         string             `json:"image"`
+	Ingredients   []IngredientAmount `json:"ingredients"`
+	Categories    []RecipeCategory   `json:"categories"`
+	RecipeCuisine RecipeCuisine      `json:"recipeCuisine"`
+	User          User               `json:"user_id"`
 }
 
 type RecipeDB struct {
@@ -22,8 +22,8 @@ type RecipeDB struct {
 	Likes         int    `json:"likes"`
 	Comments      int    `json:"comments"`
 	Image         string `json:"image"`
-	RecipeCuisine string `json:"recipe_cuisine"`
-	User          string `json:"user"`
+	RecipeCuisine int    `json:"recipe_cuisine"`
+	User          string `json:"user_id"`
 }
 
 func ToRecipeDB(r Recipe) RecipeDB {
