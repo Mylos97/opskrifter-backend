@@ -6,16 +6,35 @@ import (
 	"opskrifter-backend/internal/api"
 	"opskrifter-backend/internal/middleware"
 	"opskrifter-backend/pkg/db"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
-	db.Init(false)
+	env := os.Getenv("ENV")
+
+	isProd := env == "production"
+	db.Init(isProd)
 
 	r := chi.NewRouter()
-	r.Use(middleware.APIKeyAuth)
+
+	if isProd {
+		r.Use(middleware.APIKeyAuth)
+		log.Println("Starting in PRODUCTION mode...")
+	} else {
+		log.Println("Starting in LOCAL mode...")
+	}
+
 	api.RegisterRoutes(r)
-	log.Println("API server running on http://localhost:8080")
-	http.ListenAndServe(":8080", r)
+
+	addr := ":8080"
+	if isProd {
+		addr = ":80"
+	}
+
+	log.Printf("API server running on http://localhost%s", addr)
+	if err := http.ListenAndServe(addr, r); err != nil {
+		log.Fatalf("failed to start server: %v", err)
+	}
 }
