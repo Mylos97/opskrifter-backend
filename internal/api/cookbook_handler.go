@@ -28,7 +28,7 @@ func CreateCookBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = tx.Exec(`
-		INSERT INTO cookbooks (id, name, description, likes, user)
+		INSERT INTO cookbooks (id, name, description, likes, user_id)
 		VALUES (?, ?, ?, ?, ?)`,
 		cb.ID, cb.Name, cb.Description, cb.Likes, cb.User)
 
@@ -69,7 +69,7 @@ func CreateCookBook(w http.ResponseWriter, r *http.Request) {
 func GetCookBook(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	row := db.DB.QueryRow(`
-		SELECT id, name, description, likes, user
+		SELECT id, name, description, likes, user_id
 		FROM cookbooks WHERE id = ?`, id)
 
 	var cb types.CookBook
@@ -131,7 +131,7 @@ func UpdateCookBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = tx.Exec(`
-		UPDATE cookbooks SET name=?, description=?, likes=?, user=?
+		UPDATE cookbooks SET name=?, description=?, likes=?, user_id=?
 		WHERE id=?`,
 		cb.Name, cb.Description, cb.Likes, cb.User, cb.ID)
 	if err != nil {

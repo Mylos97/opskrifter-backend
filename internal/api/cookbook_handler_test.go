@@ -35,7 +35,7 @@ func setupTestCookBook(t *testing.T) {
 func insertTestCookBook(t *testing.T, cookbook types.CookBook) {
 
 	_, err := db.DB.Exec(`
-        INSERT INTO cookbooks (id, name, description, likes, user)
+        INSERT INTO cookbooks (id, name, description, likes, user_id)
         VALUES (?, ?, ?, ?, ?)`,
 		cookbook.ID, cookbook.Name, cookbook.Description, cookbook.Likes, cookbook.User,
 	)

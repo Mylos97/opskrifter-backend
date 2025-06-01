@@ -19,6 +19,7 @@ var testUser = types.User{
 	ID:        "test-id",
 	Name:      "test-user",
 	CreatedAt: time.Now().String(),
+	Email:     "test@mail.com",
 }
 
 func setupTestUser(t *testing.T) {
@@ -32,9 +33,9 @@ func setupTestUser(t *testing.T) {
 
 func insertTestUser(t *testing.T) {
 	_, err := db.DB.Exec(`
-        INSERT INTO users (id, name, created_at)
-        VALUES (?, ?, ?)`,
-		testUser.ID, testUser.Name, testUser.CreatedAt)
+        INSERT INTO users (id, name, created_at, email)
+        VALUES (?, ?, ?, ?)`,
+		testUser.ID, testUser.Name, testUser.CreatedAt, testUser.Email)
 	if err != nil {
 		t.Fatalf("failed to insert test user: %v", err)
 	}

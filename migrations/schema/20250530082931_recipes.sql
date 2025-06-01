@@ -1,15 +1,15 @@
 -- +goose Up
 CREATE TABLE
   IF NOT EXISTS recipes (
-    id TEXT PRIMARY KEY,
-    name TEXT,
-    minutes INTEGER,
-    description TEXT,
-    likes INTEGER,
-    comments INTEGER,
-    image TEXT,
-    recipe_cuisine TEXT,
-    user TEXT,
+    id TEXT PRIMARY KEY NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    minutes INTEGER NOT NULL,
+    description TEXT NOT NULL,
+    likes INTEGER DEFAULT 0,
+    comments INTEGER DEFAULT 0,
+    image TEXT NOT NULL,
+    recipe_cuisine TEXT NOT NULL,
+    user TEXT NOT NULL,
     FOREIGN KEY (recipe_cuisine) REFERENCES recipe_cuisines (id) ON DELETE SET NULL 
     FOREIGN KEY (user) REFERENCES users (id) ON DELETE SET NULL
   );

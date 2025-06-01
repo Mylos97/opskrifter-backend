@@ -2,16 +2,16 @@
 CREATE TABLE
   IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT
+    name TEXT NOT NULL UNIQUE
   );
 
   CREATE TABLE
   IF NOT EXISTS recipe_categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
     recipe_id TEXT,
-    category INTEGER,
+    category_id INTEGER,
+    PRIMARY KEY (category_id, recipe_id),
     FOREIGN KEY (recipe_id) REFERENCES recipes (id) ON DELETE CASCADE
-    FOREIGN KEY (category) REFERENCES categories (id) ON DELETE CASCADE
+    FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE
   );
 
 -- +goose Down

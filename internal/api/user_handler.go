@@ -9,12 +9,14 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 // POST /user/
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user types.User
 	user.CreatedAt = time.Now().String()
+	user.ID = uuid.New().String()
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
@@ -27,9 +29,9 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = tx.Exec(`
-		INSERT INTO users (name, created_at)
-		VALUES (?, ?)`,
-		user.Name, user.CreatedAt)
+		INSERT INTO users (id, name, created_at, email)
+		VALUES (?, ?, ?, ?)`,
+		user.ID, user.Name, user.CreatedAt, user.Email)
 
 	if err != nil {
 		tx.Rollback()
