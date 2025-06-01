@@ -58,6 +58,19 @@ func CreateRecipe(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	for _, cat := range rec.Categories {
+		_, err := tx.Exec(`
+			INSERT INTO recipe_categories (recipe_id, category_id)
+			VALUES (?, ?)`,
+			rec.ID, cat.ID)
+
+		if err != nil {
+			tx.Rollback()
+			http.Error(w, "Failed to insert categories: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
 	if err := tx.Commit(); err != nil {
 		http.Error(w, "Failed to commit transaction: "+err.Error(), http.StatusInternalServerError)
 		return

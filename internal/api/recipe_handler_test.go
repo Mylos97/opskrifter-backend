@@ -32,7 +32,9 @@ var testRecipe = types.Recipe{
 			Amount:     "2 stk",
 		},
 	},
-	Categories: []types.RecipeCategory{},
+	Categories: []types.RecipeCategory{
+		{ID: 1, Name: "Category 1"},
+	},
 	RecipeCuisine: types.RecipeCuisine{
 		ID:   1,
 		Name: "Italian",
