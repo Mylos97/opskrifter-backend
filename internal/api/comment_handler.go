@@ -132,8 +132,8 @@ func UpdateComment(w http.ResponseWriter, r *http.Request) {
 	comment.ID = id
 
 	_, err = db.DB.Exec(`
-		UPDATE comments SET comment = ?, user_id = ? WHERE id = ?`,
-		comment.Comment, comment.User.ID, comment.ID)
+		UPDATE comments SET comment = ? WHERE id = ?`,
+		comment.Comment, comment.ID)
 
 	if err != nil {
 		tx.Rollback()

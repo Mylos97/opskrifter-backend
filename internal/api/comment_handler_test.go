@@ -49,7 +49,6 @@ func TestCreateComment(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	setupTestComment(t)
 	CreateComment(w, req)
 
 	res := w.Result()
@@ -117,6 +116,7 @@ func TestUpdateComment(t *testing.T) {
 	ctx.URLParams.Add("id", commentID)
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, ctx))
 
+	setupTestComment(t)
 	UpdateComment(w, req)
 
 	res := w.Result()
@@ -141,12 +141,13 @@ func TestUpdateComment(t *testing.T) {
 }
 
 func TestDeleteComment(t *testing.T) {
-	cookBookID := testCookBook.ID
+	commentId := testComment.ID
 
-	req := httptest.NewRequest(http.MethodDelete, "/recipes/"+cookBookID, nil)
+	req := httptest.NewRequest(http.MethodDelete, "/comments/"+commentId, nil)
 	w := httptest.NewRecorder()
 
-	DeleteCookBook(w, req)
+	insertTestComment(t)
+	DeleteComment(w, req)
 
 	res := w.Result()
 	defer res.Body.Close()
@@ -155,7 +156,7 @@ func TestDeleteComment(t *testing.T) {
 		t.Errorf("expected status 204 No Content, got %d", res.StatusCode)
 	}
 
-	reqGet := httptest.NewRequest(http.MethodGet, "/recipes/"+cookBookID, nil)
+	reqGet := httptest.NewRequest(http.MethodGet, "/comments/"+commentId, nil)
 	wGet := httptest.NewRecorder()
 	GetRecipe(wGet, reqGet)
 	resGet := wGet.Result()
