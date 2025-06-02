@@ -119,18 +119,30 @@ func UpdateComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tx, err := db.DB.Begin()
+	if err != nil {
+		http.Error(w, "Failed to begin transaction: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	if comment.ID != "" && comment.ID != id {
 		http.Error(w, "ID in URL and body do not match", http.StatusBadRequest)
 		return
 	}
 	comment.ID = id
 
-	_, err := db.DB.Exec(`
+	_, err = db.DB.Exec(`
 		UPDATE comments SET comment = ?, user_id = ? WHERE id = ?`,
 		comment.Comment, comment.User.ID, comment.ID)
 
 	if err != nil {
-		http.Error(w, "Failed to update comment: "+err.Error(), http.StatusInternalServerError)
+		tx.Rollback()
+		http.Error(w, "Failed to insert comment: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "Failed to commit transaction: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -141,9 +153,26 @@ func UpdateComment(w http.ResponseWriter, r *http.Request) {
 func DeleteComment(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	_, err := db.DB.Exec(`DELETE FROM comments WHERE id = ?`, id)
+	tx, err := db.DB.Begin()
+	if err != nil {
+		http.Error(w, "Failed to begin transaction: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = db.DB.Exec(`DELETE FROM comments WHERE id = ?`, id)
 	if err != nil {
 		http.Error(w, "Failed to delete comment: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err != nil {
+		tx.Rollback()
+		http.Error(w, "Failed to delete comment: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "Failed to commit transaction: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
