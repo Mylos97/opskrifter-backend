@@ -81,7 +81,18 @@
 | PUT    | `/comments/{id}`          | Update a comment by ID              |
 | DELETE | `/comments/{id}`          | Delete a comment by ID              |
 
----
+<pre lang="md">
+{
+  "id": "comment-001",
+  "recipe": {
+    ...
+  },
+  "user": {
+    ...
+  },
+  "comment": "This recipe was amazing! I added a bit more garlic and it turned out great."
+}
+</pre>
 
 ### 👤 Users
 
@@ -92,7 +103,14 @@
 | PUT    | `/users/{id}`   | Update a user by ID      |
 | DELETE | `/users/{id}`   | Delete a user by ID      |
 
----
+<pre lang="md">
+{
+  "id": "user-123",
+  "name": "Jane Doe",
+  "email": "jane.doe@example.com",
+  "createdAt": "2025-06-01T14:30:00Z"
+}
+</pre>
 
 ### ❤️ Recipe Likes
 
@@ -102,16 +120,9 @@
 | PUT    | `/like_recipe/unlike`       | Unlike a recipe                |
 | GET    | `/like_recipe/{recipe_id}`  | Get users who liked a recipe   |
 
----
-
-## Getting Started
-
-### Prerequisites
-
-- Go 1.18+
-- Database setup (e.g., SQLite, PostgreSQL)
-
-### Running the Server
-
-```bash
-go run main.go
+<pre lang="md">
+{
+  "user_id": "user-123",
+  "recipe_id": "recipe-456"
+}
+</pre>
