@@ -10,7 +10,7 @@
 | DELETE | `/recipes/{id}`    | Delete a recipe by ID    |
 | GET    | `/recipes/`        | Get a list of recipes    |
 
-<pre lang="md"> ### 📦 Sample Recipe JSON ```json
+<pre lang="md">
 {
   "id": "123e4567-e89b-12d3-a456-426614174000",
   "name": "Spaghetti Carbonara",
@@ -44,8 +44,7 @@
     "email": "jane@example.com"
   }
 }
-``` </pre>
----
+</pre>
 
 ### 📚 Cookbooks
 
@@ -56,8 +55,23 @@
 | PUT    | `/cookbooks/{id}`    | Update a cookbook by ID    |
 | DELETE | `/cookbooks/{id}`    | Delete a cookbook by ID    |
 
----
-
+<pre lang="md">
+{
+  "id": "cb-001",
+  "name": "Italian Favorites",
+  "description": "A collection of classic Italian recipes passed down through generations.",
+  "likes": 42,
+  "recipes": [
+    {
+      ...
+    },
+    {
+      ...
+    }
+  ],
+  "creator": "user-123"
+}
+</pre>
 ### 💬 Comments
 
 | Method | Endpoint                  | Description                         |
