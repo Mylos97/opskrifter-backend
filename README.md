@@ -1,6 +1,3 @@
-
----
-
 ## Endpoints
 
 ### 📘 Recipes
@@ -13,7 +10,7 @@
 | DELETE | `/recipes/{id}`    | Delete a recipe by ID    |
 | GET    | `/recipes/`        | Get a list of recipes    |
 
-
+<pre lang="md"> ### 📦 Sample Recipe JSON ```json
 {
   "id": "123e4567-e89b-12d3-a456-426614174000",
   "name": "Spaghetti Carbonara",
@@ -47,9 +44,7 @@
     "email": "jane@example.com"
   }
 }
-
-
-
+``` </pre>
 ---
 
 ### 📚 Cookbooks
