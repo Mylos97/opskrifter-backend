@@ -131,7 +131,7 @@ func UpdateComment(w http.ResponseWriter, r *http.Request) {
 	}
 	comment.ID = id
 
-	_, err = db.DB.Exec(`
+	_, err = tx.Exec(`
 		UPDATE comments SET comment = ? WHERE id = ?`,
 		comment.Comment, comment.ID)
 
@@ -149,7 +149,7 @@ func UpdateComment(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, comment)
 }
 
-// DELETE /cookbooks/{id}
+// DELETE /comments/{id}
 func DeleteComment(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -159,14 +159,8 @@ func DeleteComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.DB.Exec(`DELETE FROM comments WHERE id = ?`, id)
+	_, err = tx.Exec(`DELETE FROM comments WHERE id = ?`, id)
 	if err != nil {
-		http.Error(w, "Failed to delete comment: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if err != nil {
-		tx.Rollback()
 		http.Error(w, "Failed to delete comment: "+err.Error(), http.StatusInternalServerError)
 		return
 	}

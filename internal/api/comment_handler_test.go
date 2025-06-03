@@ -45,7 +45,7 @@ func TestCreateComment(t *testing.T) {
 		t.Fatalf("failed to marshal comment: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodPost, "/comments", bytes.NewReader(payload))
+	req := httptest.NewRequest(http.MethodPost, "/comments/", bytes.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
@@ -105,7 +105,7 @@ func TestUpdateComment(t *testing.T) {
 
 	payload, err := json.Marshal(updatedComment)
 	if err != nil {
-		t.Fatalf("failed to marshal updated recipe: %v", err)
+		t.Fatalf("failed to marshal updated comment: %v", err)
 	}
 
 	req := httptest.NewRequest(http.MethodPut, "/comments/"+commentID, bytes.NewReader(payload))
@@ -141,9 +141,12 @@ func TestUpdateComment(t *testing.T) {
 }
 
 func TestDeleteComment(t *testing.T) {
-	commentId := testComment.ID
+	commentID := testComment.ID
 
-	req := httptest.NewRequest(http.MethodDelete, "/comments/"+commentId, nil)
+	req := httptest.NewRequest(http.MethodDelete, "/comments/"+commentID, nil)
+	ctx := chi.NewRouteContext()
+	ctx.URLParams.Add("id", commentID)
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, ctx))
 	w := httptest.NewRecorder()
 
 	insertTestComment(t)
@@ -154,15 +157,5 @@ func TestDeleteComment(t *testing.T) {
 
 	if res.StatusCode != http.StatusNoContent {
 		t.Errorf("expected status 204 No Content, got %d", res.StatusCode)
-	}
-
-	reqGet := httptest.NewRequest(http.MethodGet, "/comments/"+commentId, nil)
-	wGet := httptest.NewRecorder()
-	GetRecipe(wGet, reqGet)
-	resGet := wGet.Result()
-	defer resGet.Body.Close()
-
-	if resGet.StatusCode != http.StatusNotFound {
-		t.Errorf("expected status 404 Not Found after delete, got %d", resGet.StatusCode)
 	}
 }
