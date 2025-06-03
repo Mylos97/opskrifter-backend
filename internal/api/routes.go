@@ -40,4 +40,9 @@ func RegisterRoutes(r *chi.Mux) {
 		r.Delete("/{id}", DeleteUser)
 	})
 
+	r.Route("/like_recipe", func(r chi.Router) {
+		r.Put("/like", LikeRecipe)
+		r.Put("/unlike", UnLikeRecipe)
+		r.Get("/{recipe_id}", GetLikeDRecipes)
+	})
 }

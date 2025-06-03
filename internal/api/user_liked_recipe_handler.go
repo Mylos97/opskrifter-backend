@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// PUT /like_recipe/like
 func LikeRecipe(w http.ResponseWriter, r *http.Request) {
 	var o types.UserLikedRecipe
 
@@ -42,6 +43,7 @@ func LikeRecipe(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, o)
 }
 
+// PUT /like_recipe/unlike
 func UnLikeRecipe(w http.ResponseWriter, r *http.Request) {
 	var o types.UserLikedRecipe
 
@@ -72,6 +74,7 @@ func UnLikeRecipe(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, o)
 }
 
+// GET like_recipe/{user_id}
 func GetLikeDRecipes(w http.ResponseWriter, r *http.Request) {
 	user_id := chi.URLParam(r, "user_id")
 

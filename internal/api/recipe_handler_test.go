@@ -53,23 +53,11 @@ func setupTestRecipe(t *testing.T) {
 }
 
 func insertTestRecipe(t *testing.T, recipe types.Recipe) {
-	dbRec := types.RecipeDB{
-		ID:            recipe.ID,
-		Name:          recipe.Name,
-		Minutes:       recipe.Minutes,
-		Description:   recipe.Description,
-		Likes:         recipe.Likes,
-		Comments:      recipe.Comments,
-		Image:         recipe.Image,
-		RecipeCuisine: recipe.RecipeCuisine.ID,
-		User:          recipe.User.ID,
-	}
-
 	_, err := db.DB.Exec(`
         INSERT INTO recipes (id, name, minutes, description, likes, comments, image, recipe_cuisine, user_id)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		dbRec.ID, dbRec.Name, dbRec.Minutes, dbRec.Description,
-		dbRec.Likes, dbRec.Comments, dbRec.Image, dbRec.RecipeCuisine, dbRec.User)
+		recipe.ID, recipe.Name, recipe.Minutes, recipe.Description,
+		recipe.Likes, recipe.Comments, recipe.Image, recipe.RecipeCuisine.ID, recipe.User.ID)
 	if err != nil {
 		t.Fatalf("failed to insert test recipe: %v", err)
 	}

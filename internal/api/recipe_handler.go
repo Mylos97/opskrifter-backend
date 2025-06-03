@@ -18,7 +18,7 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 	json.NewEncoder(w).Encode(data)
 }
 
-// CreateRecipe handles POST /recipes
+// PUT /recipes/
 func CreateRecipe(w http.ResponseWriter, r *http.Request) {
 	var rec types.Recipe
 	if err := json.NewDecoder(r.Body).Decode(&rec); err != nil {
@@ -79,7 +79,7 @@ func CreateRecipe(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, rec)
 }
 
-// GetRecipe handles GET /recipes/{id}
+// GET /recipes/{id}
 func GetRecipe(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -118,7 +118,7 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, rec)
 }
 
-// UpdateRecipe handles PUT /recipes/{id}
+// PUT /recipes/{id}
 func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	var rec types.Recipe
@@ -180,7 +180,7 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, rec)
 }
 
-// DeleteRecipe handles DELETE /recipes/{id}
+// DELETE /recipes/{id}
 func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
