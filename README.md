@@ -118,7 +118,7 @@
 |--------|-----------------------------|--------------------------------|
 | PUT    | `/like_recipe/like`         | Like a recipe                  |
 | PUT    | `/like_recipe/unlike`       | Unlike a recipe                |
-| GET    | `/like_recipe/{recipe_id}`  | Get users who liked a recipe   |
+| GET    | `/like_recipe/{user_id}`  | Get the recipes a user liked   |
 
 <pre lang="md">
 {

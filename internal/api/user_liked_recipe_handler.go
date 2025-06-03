@@ -27,7 +27,7 @@ func LikeRecipe(w http.ResponseWriter, r *http.Request) {
 	_, err = tx.Exec(`
 		INSERT INTO user_liked_recipe (user_id, recipe_id)
 		VALUES (?, ?)`,
-		o.RecipeId, o.UserId)
+		o.UserId, o.RecipeId)
 
 	if err != nil {
 		tx.Rollback()
@@ -35,6 +35,19 @@ func LikeRecipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, err = tx.Exec(`
+		UPDATE recipes
+		SET likes = likes + 1
+		WHERE id = ?`,
+		o.RecipeId)
+
+	if err != nil {
+		tx.Rollback()
+		http.Error(w, "Failed to update recipe likes: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Commit transaction
 	if err := tx.Commit(); err != nil {
 		http.Error(w, "Failed to commit transaction: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -63,6 +76,18 @@ func UnLikeRecipe(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		tx.Rollback()
 		http.Error(w, "Failed to delete liked recipe: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = tx.Exec(`
+		UPDATE recipes
+		SET likes = MAX(likes - 1,0)
+		WHERE id = ?`,
+		o.RecipeId)
+
+	if err != nil {
+		tx.Rollback()
+		http.Error(w, "Failed to decrease recipe likes: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
