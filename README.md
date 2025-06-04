@@ -15,7 +15,7 @@
   "id": "123e4567-e89b-12d3-a456-426614174000",
   "name": "Spaghetti Carbonara",
   "minutes": 30,
-  "description": "A classic Italian pasta dish made with eggs, cheese, pancetta, and pepper.",
+  "description": "A classic Italian pasta dish made with eggs, ....",
   "likes": 25,
   "comments": 4,
   "image": "https://example.com/images/spaghetti.jpg",
