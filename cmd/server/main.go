@@ -14,7 +14,7 @@ import (
 func main() {
 	env := os.Getenv("ENV")
 
-	isProd := env == "production"
+	isProd := env == "prod"
 	db.Init(isProd)
 
 	r := chi.NewRouter()
