@@ -108,7 +108,7 @@
   "id": "user-123",
   "name": "Jane Doe",
   "email": "jane.doe@example.com",
-  "createdAt": "2025-06-01T14:30:00Z"
+  "created_at": "2025-06-01T14:30:00Z"
 }
 </pre>
 
