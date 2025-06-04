@@ -49,7 +49,7 @@ func TestCreateComment(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	insertTestRecipe(t, testRecipe)
+	setupTestRecipe(t)
 
 	var initialComments int
 	err = db.DB.QueryRow(`SELECT comments FROM recipes WHERE id = ?`, testLike.RecipeId).Scan(&initialComments)
@@ -167,7 +167,7 @@ func TestDeleteComment(t *testing.T) {
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, ctx))
 	w := httptest.NewRecorder()
 
-	insertTestRecipe(t, testRecipe)
+	setupTestCookBook(t)
 	insertTestComment(t)
 	DeleteComment(w, req)
 
