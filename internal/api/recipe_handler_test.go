@@ -35,10 +35,7 @@ var testRecipe = types.Recipe{
 	Categories: []types.RecipeCategory{
 		{ID: 1, Name: "Category 1"},
 	},
-	RecipeCuisine: types.RecipeCuisine{
-		ID:   1,
-		Name: "Italian",
-	},
+	RecipeCuisine: "cuisine",
 	User: types.User{
 		ID: "google-user-123",
 	},
@@ -57,7 +54,7 @@ func insertTestRecipe(t *testing.T, recipe types.Recipe) {
         INSERT INTO recipes (id, name, minutes, description, likes, comments, image, recipe_cuisine, user_id)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		recipe.ID, recipe.Name, recipe.Minutes, recipe.Description,
-		recipe.Likes, recipe.Comments, recipe.Image, recipe.RecipeCuisine.ID, recipe.User.ID)
+		recipe.Likes, recipe.Comments, recipe.Image, recipe.RecipeCuisine, recipe.User.ID)
 	if err != nil {
 		t.Fatalf("failed to insert test recipe: %v", err)
 	}

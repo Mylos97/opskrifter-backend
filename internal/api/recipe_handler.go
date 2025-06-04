@@ -37,7 +37,7 @@ func CreateRecipe(w http.ResponseWriter, r *http.Request) {
 	_, err = tx.Exec(`
 		INSERT INTO recipes (id, name, minutes, description, likes, comments, image, user_id, recipe_cuisine)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		rec.ID, rec.Name, rec.Minutes, rec.Description, rec.Likes, rec.Comments, rec.Image, rec.User.ID, rec.RecipeCuisine.ID)
+		rec.ID, rec.Name, rec.Minutes, rec.Description, rec.Likes, rec.Comments, rec.Image, rec.User.ID, rec.RecipeCuisine)
 
 	if err != nil {
 		tx.Rollback()

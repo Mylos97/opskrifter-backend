@@ -10,7 +10,6 @@ CREATE TABLE
     image TEXT NOT NULL,
     recipe_cuisine TEXT NOT NULL,
     user_id TEXT NOT NULL,
-    FOREIGN KEY (recipe_cuisine) REFERENCES recipe_cuisines (id) ON DELETE SET NULL 
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
   );
 

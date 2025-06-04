@@ -10,6 +10,6 @@ type Recipe struct {
 	Image         string             `json:"image"`
 	Ingredients   []IngredientAmount `json:"ingredients"`
 	Categories    []RecipeCategory   `json:"categories"`
-	RecipeCuisine RecipeCuisine      `json:"recipe_cuisine"`
+	RecipeCuisine string             `json:"recipe_cuisine"`
 	User          User               `json:"user_id"`
 }
