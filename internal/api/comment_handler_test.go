@@ -49,6 +49,14 @@ func TestCreateComment(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
+	insertTestRecipe(t, testRecipe)
+
+	var initialComments int
+	err = db.DB.QueryRow(`SELECT comments FROM recipes WHERE id = ?`, testLike.RecipeId).Scan(&initialComments)
+	if err != nil {
+		t.Fatalf("failed to get initial comments: %v", err)
+	}
+
 	CreateComment(w, req)
 
 	res := w.Result()
@@ -65,6 +73,16 @@ func TestCreateComment(t *testing.T) {
 
 	if createdComment.Comment != testComment.Comment {
 		t.Errorf("expected Comment name 'Test Recipe', got '%s'", createdComment.Comment)
+	}
+
+	var updatedComments int
+	err = db.DB.QueryRow(`SELECT comments FROM recipes WHERE id = ?`, testLike.RecipeId).Scan(&updatedComments)
+	if err != nil {
+		t.Fatalf("failed to get updated likes: %v", err)
+	}
+
+	if updatedComments != 1 {
+		t.Errorf("expected comments to be %d, got %d", 0, updatedComments)
 	}
 }
 
@@ -136,7 +154,7 @@ func TestUpdateComment(t *testing.T) {
 	}
 
 	if rec.Comment != updated {
-		t.Errorf("expected updated recipe name '%s', got '%s'", updated, rec.Comment)
+		t.Errorf("expected updated comment '%s', got '%s'", updated, rec.Comment)
 	}
 }
 
@@ -149,6 +167,7 @@ func TestDeleteComment(t *testing.T) {
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, ctx))
 	w := httptest.NewRecorder()
 
+	insertTestRecipe(t, testRecipe)
 	insertTestComment(t)
 	DeleteComment(w, req)
 
@@ -157,5 +176,15 @@ func TestDeleteComment(t *testing.T) {
 
 	if res.StatusCode != http.StatusNoContent {
 		t.Errorf("expected status 204 No Content, got %d", res.StatusCode)
+	}
+
+	var updatedComments int
+	err := db.DB.QueryRow(`SELECT comments FROM recipes WHERE id = ?`, testLike.RecipeId).Scan(&updatedComments)
+	if err != nil {
+		t.Fatalf("failed to get updated likes: %v", err)
+	}
+
+	if updatedComments != 0 {
+		t.Errorf("expected likes to be %d, got %d", 0, updatedComments)
 	}
 }

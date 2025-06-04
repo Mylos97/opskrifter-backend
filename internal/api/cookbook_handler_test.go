@@ -21,7 +21,7 @@ var testCookBook = types.CookBook{
 	Description: "Test cookbook description",
 	Likes:       5,
 	User:        "test-user-123",
-	Recipes:     []types.Recipe{testRecipe},
+	Recipes:     []types.Recipe{{ID: testLike.RecipeId}},
 }
 
 func setupTestCookBook(t *testing.T) {

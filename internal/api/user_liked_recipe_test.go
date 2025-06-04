@@ -38,8 +38,16 @@ func TestLikeRecipe(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/likerecipe", bytes.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
+
 	setupTestUser(t)
 	setupTestRecipe(t)
+
+	var initialLikes int
+	err = db.DB.QueryRow(`SELECT likes FROM recipes WHERE id = ?`, testLike.RecipeId).Scan(&initialLikes)
+	if err != nil {
+		t.Fatalf("failed to get initial likes: %v", err)
+	}
+
 	LikeRecipe(w, req)
 
 	res := w.Result()
@@ -55,6 +63,16 @@ func TestLikeRecipe(t *testing.T) {
 
 	if newEntity.RecipeId != testLike.RecipeId && newEntity.UserId != testLike.UserId {
 		t.Errorf("expected Comment name 'Test Recipe', got '%s'", testUser.Name)
+	}
+
+	var updatedLikes int
+	err = db.DB.QueryRow(`SELECT likes FROM recipes WHERE id = ?`, testLike.RecipeId).Scan(&updatedLikes)
+	if err != nil {
+		t.Fatalf("failed to get updated likes: %v", err)
+	}
+
+	if updatedLikes != initialLikes+1 {
+		t.Errorf("expected likes to be %d, got %d", initialLikes+1, updatedLikes)
 	}
 }
 
@@ -78,6 +96,16 @@ func TestUnLikeRecipe(t *testing.T) {
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusCreated {
 		t.Errorf("expected status 201 Created, got %d", res.StatusCode)
+	}
+
+	var updatedLikes int
+	err = db.DB.QueryRow(`SELECT likes FROM recipes WHERE id = ?`, testLike.RecipeId).Scan(&updatedLikes)
+	if err != nil {
+		t.Fatalf("failed to get updated likes: %v", err)
+	}
+
+	if updatedLikes != 0 {
+		t.Errorf("expected likes to be %d, got %d", 0, updatedLikes)
 	}
 }
 

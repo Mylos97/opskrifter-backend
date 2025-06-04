@@ -38,6 +38,18 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, err = tx.Exec(`
+		UPDATE recipes
+		SET comments = comments + 1
+		WHERE id = ?`,
+		comment.Recipe.ID)
+
+	if err != nil {
+		tx.Rollback()
+		http.Error(w, "Failed to update recipe comments: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	if err := tx.Commit(); err != nil {
 		http.Error(w, "Failed to commit transaction: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -138,6 +150,18 @@ func UpdateComment(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		tx.Rollback()
 		http.Error(w, "Failed to insert comment: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = tx.Exec(`
+		UPDATE recipes
+		SET comments = MAX(comments - 1, 0)
+		WHERE id = ?`,
+		comment.Recipe.ID)
+
+	if err != nil {
+		tx.Rollback()
+		http.Error(w, "Failed to update recipe comments: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
