@@ -33,9 +33,9 @@ func insertTestIngredient(t *testing.T, i types.Ingredient) {
 }
 
 func deleteTestIngredient(t *testing.T, i types.Ingredient) {
-	_, err := db.DB.Exec("DELETE FROM ingredients WHERE id = ?", i.ID)
+	_, err := db.DB.Exec("DELETE FROM ingredients WHERE name = ?", i.Name)
 	if err != nil {
-		t.Fatalf("failed to clean test user: %v", err)
+		t.Fatalf("failed to delete ingredient: %v", err)
 	}
 }
 func TestCreateIngredient(t *testing.T) {
@@ -64,6 +64,7 @@ func TestCreateIngredient(t *testing.T) {
 	if createdIngredient.Name != testIngredient.Name {
 		t.Errorf("expected Comment name 'Test Recipe', got '%s'", testUser.Name)
 	}
+	deleteTestIngredient(t, testIngredient)
 }
 
 func TestGetIngredients(t *testing.T) {
@@ -72,8 +73,8 @@ func TestGetIngredients(t *testing.T) {
 	ctx := chi.NewRouteContext()
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, ctx))
 
-	insertTestIngredient(t, testIngredient)
-	insertTestIngredient(t, testIngredient2)
+	setupTestIngredients(t, testIngredient)
+	setupTestIngredients(t, testIngredient2)
 
 	GetIngredients(w, req)
 
