@@ -34,7 +34,7 @@
       "name": "Pasta"
     }
   ],
-  "recipeCuisine": {
+  "recipe_cuisine": {
     "id": "cuisine-1",
     "name": "Italian"
   },
