@@ -12,9 +12,9 @@ import (
 )
 
 func main() {
-	env := os.Getenv("ENV")
+	port := os.Getenv("PORT")
 
-	isProd := env == "prod"
+	isProd := port != "8080"
 	db.Init(isProd)
 
 	if _, err := db.DB.Exec("PRAGMA foreign_keys = ON"); err != nil {
@@ -32,13 +32,8 @@ func main() {
 
 	api.RegisterRoutes(r)
 
-	addr := ":8080"
-	if isProd {
-		addr = ":80"
-	}
-
-	log.Printf("API server running on http://localhost%s", addr)
-	if err := http.ListenAndServe(addr, r); err != nil {
+	log.Printf("API server running on http://localhost%s", port)
+	if err := http.ListenAndServe(port, r); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}
 }

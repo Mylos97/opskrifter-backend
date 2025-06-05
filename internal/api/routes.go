@@ -2,11 +2,14 @@ package api
 
 import (
 	"net/http"
+	"opskrifter-backend/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
 )
 
 func RegisterRoutes(r *chi.Mux) {
+	r.Use(middleware.APIKeyAuth)
+
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
@@ -45,5 +48,4 @@ func RegisterRoutes(r *chi.Mux) {
 		r.Put("/unlike", UnLikeRecipe)
 		r.Get("/{user_id}", GetLikeDRecipes)
 	})
-
 }
