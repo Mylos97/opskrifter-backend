@@ -60,9 +60,4 @@ func Init(inMemory bool) {
 	if err := goose.Up(DB, schemaDir); err != nil {
 		log.Fatalf("failed to run schema migrations: %v", err)
 	}
-
-	dataDir := filepath.Join(packageRoot, "migrations", "data")
-	if err := goose.Up(DB, dataDir); err != nil {
-		log.Fatalf("failed to run migrations: %v", err)
-	}
 }
