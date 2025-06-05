@@ -14,10 +14,6 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-var testIngredient = types.Ingredient{
-	Name: "Tomat",
-}
-
 var testRecipe = types.Recipe{
 	ID:          "test-id-123",
 	Name:        "Test Recipe",
@@ -26,14 +22,13 @@ var testRecipe = types.Recipe{
 	Likes:       0,
 	Comments:    0,
 	Image:       "http://example.com/image.jpg",
-	Ingredients: []types.IngredientAmount{
+	Ingredients: []types.IngredientsForRecipe{
 		{
-			Ingredient: testIngredient,
-			Amount:     "2 stk",
+			Name: "500g pasta",
 		},
 	},
 	Categories: []types.RecipeCategory{
-		{ID: 1, Name: "Category 1"},
+		{Category: "Category 1"},
 	},
 	RecipeCuisine: "cuisine",
 	User: types.User{

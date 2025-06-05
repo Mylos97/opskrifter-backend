@@ -17,6 +17,10 @@ func main() {
 	isProd := env == "prod"
 	db.Init(isProd)
 
+	if _, err := db.DB.Exec("PRAGMA foreign_keys = ON"); err != nil {
+		log.Fatalf("failed to enable foreign key constraints: %v", err)
+	}
+
 	r := chi.NewRouter()
 
 	if isProd {

@@ -1,6 +1,6 @@
 package types
 
 type RecipeCategory struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	RecipeID int    `json:"recipe_id"`
+	Category string `json:"category"`
 }

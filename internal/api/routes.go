@@ -46,8 +46,4 @@ func RegisterRoutes(r *chi.Mux) {
 		r.Get("/{user_id}", GetLikeDRecipes)
 	})
 
-	r.Route("/ingredients", func(r chi.Router) {
-		r.Put("/", CreatIngredient)
-		r.Get("/", GetIngredients)
-	})
 }
