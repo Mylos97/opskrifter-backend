@@ -60,7 +60,7 @@ func CreateRecipe(w http.ResponseWriter, r *http.Request) {
 
 	for _, cat := range rec.Categories {
 		_, err := tx.Exec(`
-			INSERT INTO recipe_categories (recipe_id, category_id)
+			INSERT INTO recipe_categories (recipe_id, category)
 			VALUES (?, ?)`,
 			rec.ID, cat.Category)
 
