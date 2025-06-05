@@ -24,7 +24,7 @@ var testRecipe = types.Recipe{
 	Image:       "http://example.com/image.jpg",
 	Ingredients: []types.IngredientsForRecipe{
 		{
-			Name: "500g pasta",
+			Ingredient: "500g pasta",
 		},
 	},
 	Categories: []types.RecipeCategory{

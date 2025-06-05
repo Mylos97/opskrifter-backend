@@ -47,9 +47,9 @@ func CreateRecipe(w http.ResponseWriter, r *http.Request) {
 
 	for _, ing := range rec.Ingredients {
 		_, err := tx.Exec(`
-			INSERT INTO ingredients_for_recipe (recipe_id, name)
+			INSERT INTO ingredients_for_recipe (recipe_id, ingredient)
 			VALUES (?, ?)`,
-			rec.ID, ing.Name)
+			rec.ID, ing.Ingredient)
 
 		if err != nil {
 			tx.Rollback()
@@ -98,7 +98,7 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := db.DB.Query(`SELECT name FROM ingredients_for_recipe WHERE recipe_id = ?`, id)
+	rows, err := db.DB.Query(`SELECT ingredient FROM ingredients_for_recipe WHERE recipe_id = ?`, id)
 	if err != nil {
 		http.Error(w, "Failed to fetch ingredients: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -108,7 +108,7 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var ing types.IngredientsForRecipe
-		if err := rows.Scan(&ing.Name); err != nil {
+		if err := rows.Scan(&ing.Ingredient); err != nil {
 			log.Printf("Failed to scan ingredient: %v", err)
 			continue
 		}
@@ -158,7 +158,7 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert new ingredients
-	stmt, err := tx.Prepare(`INSERT INTO ingredients_for_recipe (recipe_id, name) VALUES (?, ?)`)
+	stmt, err := tx.Prepare(`INSERT INTO ingredients_for_recipe (recipe_id, ingredient) VALUES (?, ?)`)
 	if err != nil {
 		http.Error(w, "Failed to prepare ingredient insert: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -166,7 +166,7 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 	defer stmt.Close()
 
 	for _, ing := range rec.Ingredients {
-		if _, err := stmt.Exec(rec.ID, ing.Name); err != nil {
+		if _, err := stmt.Exec(rec.ID, ing.Ingredient); err != nil {
 			http.Error(w, "Failed to insert ingredient: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
