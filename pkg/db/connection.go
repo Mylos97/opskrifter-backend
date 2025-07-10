@@ -1,16 +1,16 @@
 package db
 
 import (
-	"database/sql"
 	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pressly/goose"
 )
 
-var DB *sql.DB
+var DB *sqlx.DB
 
 func findProjectRoot() (string, error) {
 	dir, err := os.Getwd()
@@ -36,7 +36,7 @@ func Init(inMemory bool) {
 		dsn = ":memory:"
 	}
 
-	DB, err = sql.Open("sqlite3", dsn)
+	DB, err = sqlx.Open("sqlite3", dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,7 +57,7 @@ func Init(inMemory bool) {
 	}
 
 	schemaDir := filepath.Join(packageRoot, "migrations", "schema")
-	if err := goose.Up(DB, schemaDir); err != nil {
+	if err := goose.Up(DB.DB, schemaDir); err != nil {
 		log.Fatalf("failed to run schema migrations: %v", err)
 	}
 }

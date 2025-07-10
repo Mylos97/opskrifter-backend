@@ -1,0 +1,119 @@
+package api
+
+import (
+	"fmt"
+	"opskrifter-backend/internal/types"
+	"reflect"
+	"strings"
+)
+
+type (
+	CrudFunc[T types.Identifiable] func(T) error
+	GetFunc[T types.Identifiable]  func(T) (T, error)
+)
+
+type QueryOptions struct {
+	Filters map[string]any
+	Page    int
+	PerPage int
+	OrderBy string
+}
+
+func buildInsertQuery(obj any) (string, []any) {
+	v := reflect.ValueOf(obj)
+	t := reflect.TypeOf(obj)
+
+	columns := []string{}
+	placeholders := []string{}
+	values := []any{}
+
+	for i := range v.NumField() {
+		field := t.Field(i)
+		dbTag := field.Tag.Get("db")
+		if dbTag == "" {
+			continue
+		}
+		columns = append(columns, dbTag)
+		placeholders = append(placeholders, "?")
+		values = append(values, v.Field(i).Interface())
+	}
+
+	table := obj.(types.Identifiable).TableName()
+	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", table,
+		strings.Join(columns, ", "),
+		strings.Join(placeholders, ", "),
+	)
+	return query, values
+}
+
+func buildUpdateQuery(obj any) (string, []any) {
+	v := reflect.ValueOf(obj)
+	t := reflect.TypeOf(obj)
+
+	assignments := []string{}
+	values := []any{}
+
+	var idValue any
+	var idColumn string
+
+	for i := range v.NumField() {
+		field := t.Field(i)
+		dbTag := field.Tag.Get("db")
+		if dbTag == "" {
+			continue
+		}
+
+		val := v.Field(i).Interface()
+		if dbTag == "id" {
+			idValue = val
+			idColumn = dbTag
+			continue
+		}
+
+		assignments = append(assignments, fmt.Sprintf("%s = ?", dbTag))
+		values = append(values, val)
+	}
+
+	values = append(values, idValue)
+	table := obj.(types.Identifiable).TableName()
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE %s = ?", table,
+		strings.Join(assignments, ", "),
+		idColumn,
+	)
+	return query, values
+}
+
+func BuildQuery(tableName string, opts QueryOptions) (string, []any) {
+	if opts.Page < 1 {
+		opts.Page = 1
+	}
+	if opts.PerPage < 1 {
+		opts.PerPage = 10
+	}
+	if opts.OrderBy == "" {
+		opts.OrderBy = "id"
+	}
+
+	offset := (opts.Page - 1) * opts.PerPage
+	var args []any
+	query := fmt.Sprintf("SELECT * FROM %s", tableName)
+
+	if len(opts.Filters) > 0 {
+		var where []string
+		i := 1
+		for k, v := range opts.Filters {
+			where = append(where, fmt.Sprintf("%s = $%d", k, i))
+			args = append(args, v)
+			i++
+		}
+		query += " WHERE " + strings.Join(where, " AND ")
+	}
+
+	query += fmt.Sprintf(" ORDER BY %s LIMIT $%d OFFSET $%d",
+		opts.OrderBy,
+		len(args)+1,
+		len(args)+2)
+	args = append(args, opts.PerPage, offset)
+
+	return query, args
+}
