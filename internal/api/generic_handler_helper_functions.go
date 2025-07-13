@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"opskrifter-backend/internal/types"
 	"reflect"
@@ -18,6 +19,8 @@ type QueryOptions struct {
 	PerPage int
 	OrderBy string
 }
+
+var ErrMissingParentOrChild = errors.New("missing parent or child tag in struct")
 
 func buildInsertQuery(obj any) (string, []any) {
 	v := reflect.ValueOf(obj)
@@ -116,4 +119,33 @@ func BuildQuery(tableName string, opts QueryOptions) (string, []any) {
 	args = append(args, opts.PerPage, offset)
 
 	return query, args
+}
+
+func buildQueryOneToManyByType[T types.Identifiable, E types.OneToMany](obj T, elements []E) (string, error) {
+	parent_id := obj.GetID()
+	relation_table := elements[0].TableName()
+
+	parts := []string{}
+	for _, e := range elements {
+		parts = append(parts, fmt.Sprintf("(%s, %s)", parent_id, e.GetChildId()))
+	}
+
+	query := strings.Join(parts, ", ")
+
+	first := reflect.ValueOf(elements[0]).Elem()
+	childType := first.Type()
+
+	parentDB, found_parent := childType.FieldByName("parent")
+	childDB, found_child := childType.FieldByName("child")
+
+	if !found_parent || !found_child {
+		return "", ErrMissingParentOrChild
+	}
+
+	parent_col := parentDB.Tag.Get("db")
+	child_col := childDB.Tag.Get("db")
+
+	sql := fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES %s", relation_table, parent_col, child_col, query)
+
+	return sql, nil
 }

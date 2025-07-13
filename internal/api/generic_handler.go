@@ -54,6 +54,24 @@ func GetManyByType[T types.Identifiable](opts QueryOptions) ([]T, error) {
 	return objs, nil
 }
 
+func CreateOneToManyByType[T types.Identifiable, E types.OneToMany](obj T, elements []E) error {
+	if len(elements) == 0 {
+		return nil
+	}
+
+	sql, err := buildQueryOneToManyByType(obj, elements)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.DB.Exec(sql)
+	if err != nil {
+		return fmt.Errorf("query failed: %w", err)
+	}
+
+	return nil
+}
+
 func HandlerByType[T types.Identifiable](crudFunc CrudFunc[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var obj T

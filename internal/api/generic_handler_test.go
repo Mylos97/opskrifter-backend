@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var recipeGenerator = testutils.NewTestDataGenerator[types.RecipeV2]()
+var recipeGenerator = testutils.NewTestDataGenerator[types.Recipe]()
 var testRecipe = recipeGenerator.Generate()
 var amount = 1000
 var testRecipes = recipeGenerator.GenerateMany(amount)
@@ -148,4 +148,8 @@ func TestGetMany(t *testing.T) {
 	if count != 0 {
 		t.Fatalf("Expecting 0 got %d", count)
 	}
+}
+
+func TestOneToMany(t *testing.T) {
+
 }
