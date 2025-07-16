@@ -6,10 +6,12 @@ import (
 	"opskrifter-backend/internal/types"
 	"reflect"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type (
-	CrudFunc[T types.Identifiable] func(T) error
+	CrudFunc[T types.Identifiable] func(T) (string, error)
 	GetFunc[T types.Identifiable]  func(T) (T, error)
 )
 
@@ -22,23 +24,29 @@ type QueryOptions struct {
 
 var ErrMissingParentOrChild = errors.New("missing parent or child tag in struct")
 
-func buildInsertQuery(obj any) (string, []any) {
+func buildInsertQuery(obj any) (string, []any, string) {
 	v := reflect.ValueOf(obj)
 	t := reflect.TypeOf(obj)
 
 	columns := []string{}
 	placeholders := []string{}
 	values := []any{}
-
+	id := uuid.New().String()
 	for i := range v.NumField() {
 		field := t.Field(i)
 		dbTag := field.Tag.Get("db")
 		if dbTag == "" {
 			continue
 		}
+		val := v.Field(i).Interface()
+
+		if dbTag == "id" {
+			val = id
+		}
+
 		columns = append(columns, dbTag)
 		placeholders = append(placeholders, "?")
-		values = append(values, v.Field(i).Interface())
+		values = append(values, val)
 	}
 
 	table := obj.(types.Identifiable).TableName()
@@ -46,7 +54,7 @@ func buildInsertQuery(obj any) (string, []any) {
 		strings.Join(columns, ", "),
 		strings.Join(placeholders, ", "),
 	)
-	return query, values
+	return query, values, id
 }
 
 func buildUpdateQuery(obj any) (string, []any) {

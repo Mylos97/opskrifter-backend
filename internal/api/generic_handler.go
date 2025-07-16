@@ -8,10 +8,10 @@ import (
 	"opskrifter-backend/pkg/db"
 )
 
-func DeleteByType[T types.Identifiable](obj T) error {
+func DeleteByType[T types.Identifiable](obj T) (string, error) {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = ?", obj.TableName())
 	_, err := db.DB.Exec(query, obj.GetID())
-	return err
+	return obj.GetID(), err
 }
 
 func GetByType[T types.Identifiable](obj T) (T, error) {
@@ -20,23 +20,23 @@ func GetByType[T types.Identifiable](obj T) (T, error) {
 	return obj, err
 }
 
-func CreateByType[T types.Identifiable](obj T) error {
-	query, args := buildInsertQuery(obj)
+func CreateByType[T types.Identifiable](obj T) (string, error) {
+	query, args, id := buildInsertQuery(obj)
 	_, err := db.DB.Exec(query, args...)
-	return err
+	return id, err
 }
 
-func UpdateByType[T types.Identifiable](obj T) error {
+func UpdateByType[T types.Identifiable](obj T) (string, error) {
 	query, args := buildUpdateQuery(obj)
 	_, err := db.DB.Exec(query, args...)
-	return err
+	return obj.GetID(), err
 }
 
 func GetCountByType[T types.Identifiable](obj T) (int, error) {
-	var count int
+	count := 0
+	println(obj.TableName())
 	query := fmt.Sprintf(`SELECT COUNT(*) FROM %s`, obj.TableName())
-
-	err := db.DB.QueryRow(query, obj.GetID()).Scan(&count)
+	err := db.DB.QueryRow(query).Scan(&count)
 	return count, err
 }
 
@@ -86,14 +86,14 @@ func HandlerByType[T types.Identifiable](crudFunc CrudFunc[T]) http.HandlerFunc 
 			return
 		}
 
-		err := crudFunc(obj)
+		id, err := crudFunc(obj)
 		if err != nil {
 			http.Error(w, "operation failed: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "operation succeeded on ID: %s\n", obj.GetID())
+		fmt.Fprintf(w, "operation succeeded on ID: %s\n", id)
 	}
 }
 

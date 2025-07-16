@@ -1,16 +1,16 @@
 package types
 
 type Recipe struct {
-	ID            string `json:"id" db:"id"`
-	Name          string `json:"name" db:"name"`
-	Minutes       int    `json:"minutes" db:"minutes"`
-	Description   string `json:"description" db:"description"`
-	Likes         int    `json:"likes" db:"likes"`
-	Comments      int    `json:"comments" db:"comments"`
-	Image         string `json:"image" db:"image"`
-	RecipeCuisine string `json:"recipe_cuisine" db:"recipe_cuisine"`
-	UserID        string `json:"user_id" db:"user_id"`
-	Ingredients   []RecipeIngredient
+	ID                string `json:"id" db:"id"`
+	Name              string `json:"name" db:"name"`
+	Minutes           int    `json:"minutes" db:"minutes"`
+	Description       string `json:"description" db:"description"`
+	Likes             int    `json:"likes" db:"likes"`
+	Comments          int    `json:"comments" db:"comments"`
+	Image             string `json:"image" db:"image"`
+	RecipeCuisine     string `json:"recipe_cuisine" db:"recipe_cuisine"`
+	UserID            string `json:"user_id" db:"user_id"`
+	RecipeIngredients []RecipeIngredient
 }
 
 func (Recipe) TableName() string { return "recipes" }
@@ -21,6 +21,7 @@ func (r Recipe) GetID() string {
 
 func (r Recipe) GetOneToMany() [][]OneToMany {
 	parts := [][]OneToMany{}
+	parts = append(parts, ToInterfaceSlice(r.RecipeIngredients))
 	return parts
 }
 
@@ -33,4 +34,10 @@ type RecipeIngredient struct {
 	ID           string `json:"id" db:"id"`
 	RecipeId     string `json:"recipe_id" db:"recipe_id" parent:""`
 	IngredientId string `json:"ingredient_id" db:"ingredient_id" child:""`
+}
+
+func (RecipeIngredient) TableName() string { return "ingredients_for_recipe" }
+
+func (ri RecipeIngredient) GetChildId() string {
+	return ri.IngredientId
 }

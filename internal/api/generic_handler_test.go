@@ -13,14 +13,20 @@ var amount = 1000
 var testRecipes = recipeGenerator.GenerateMany(amount)
 
 func TestDeleteGeneric(t *testing.T) {
-	fmt.Printf("Inserting into table %s with ID: %s\n", testRecipe.TableName(), testRecipe.ID)
 
-	err := CreateByType(testRecipe)
+	id, err := CreateByType(testRecipe)
+
+	fmt.Printf("Inserting into table %s with ID: %s\n", testRecipe.TableName(), id)
+
+	if id == "" {
+		t.Fatalf("failed to create a id: %v", id)
+	}
+
 	if err != nil {
 		t.Fatalf("failed to insert recipe: %v", err)
 	}
-
-	err = DeleteByType(testRecipe)
+	testRecipe.ID = id
+	_, err = DeleteByType(testRecipe)
 	if err != nil {
 		t.Fatalf("failed to delete recipe: %v", err)
 	}
@@ -37,13 +43,19 @@ func TestDeleteGeneric(t *testing.T) {
 }
 
 func TestGetGeneric(t *testing.T) {
+	id, err := CreateByType(testRecipe)
+
 	fmt.Printf("Inserting into table %s with ID: %s\n", testRecipe.TableName(), testRecipe.ID)
 
-	err := CreateByType(testRecipe)
+	if id == "" {
+		t.Fatalf("failed to create a id: %v", id)
+	}
+
 	if err != nil {
 		t.Fatalf("failed to insert recipe: %v", err)
 	}
 
+	testRecipe.ID = id
 	obj, err := GetByType(testRecipe)
 
 	if err != nil {
@@ -58,7 +70,7 @@ func TestGetGeneric(t *testing.T) {
 		t.Errorf("expected Name %s, got %s", testRecipe.Name, obj.Name)
 	}
 
-	err = DeleteByType(obj)
+	_, err = DeleteByType(obj)
 	if err != nil {
 		t.Fatalf("failed to clean up recipe: %v", err)
 	}
@@ -67,7 +79,12 @@ func TestGetGeneric(t *testing.T) {
 func TestCreateGeneric(t *testing.T) {
 	fmt.Printf("Inserting into table %s with ID: %s\n", testRecipe.TableName(), testRecipe.ID)
 
-	err := CreateByType(testRecipe)
+	id, err := CreateByType(testRecipe)
+
+	if id == "" {
+		t.Fatalf("failed to create a id: %v", id)
+	}
+
 	if err != nil {
 		t.Fatalf("failed to insert recipe: %v", err)
 	}
@@ -82,11 +99,16 @@ func TestCreateGeneric(t *testing.T) {
 		t.Errorf("expected 1 row after insert")
 	}
 
-	_ = DeleteByType(testRecipe)
+	_, _ = DeleteByType(testRecipe)
 }
 
 func TestUpdateGeneric(t *testing.T) {
-	err := CreateByType(testRecipe)
+	id, err := CreateByType(testRecipe)
+
+	if id == "" {
+		t.Fatalf("failed to create a id: %v", id)
+	}
+
 	if err != nil {
 		t.Fatalf("failed to insert recipe for update test: %v", err)
 	}
@@ -95,8 +117,9 @@ func TestUpdateGeneric(t *testing.T) {
 	testRecipe.Description = "Updated Description"
 	testRecipe.Image = "after.jpg"
 	testRecipe.Likes = 42
+	testRecipe.ID = id
 
-	err = UpdateByType(testRecipe)
+	_, err = UpdateByType(testRecipe)
 	if err != nil {
 		t.Fatalf("failed to update recipe: %v", err)
 	}
@@ -111,14 +134,20 @@ func TestUpdateGeneric(t *testing.T) {
 		t.Errorf("update not applied correctly: %+v", updated)
 	}
 
-	_ = DeleteByType(testRecipe)
+	_, _ = DeleteByType(testRecipe)
 }
 
 func TestGetMany(t *testing.T) {
-	for i, recipe := range testRecipes {
-		err := CreateByType(recipe)
+	for i := range testRecipes {
+		id, err := CreateByType(testRecipes[i])
+		testRecipes[i].ID = id
+
+		if id == "" {
+			t.Fatalf("failed to create a id: %v", id)
+		}
+
 		if err != nil {
-			t.Fatalf("failed to insert recipe at index %d: %v\nRecipe ID: %s", i, err, recipe.GetID())
+			t.Fatalf("failed to insert recipe at index %d: %v\nRecipe ID: %s", i, err, id)
 		}
 	}
 
@@ -133,7 +162,7 @@ func TestGetMany(t *testing.T) {
 	}
 
 	for i, recipe := range testRecipes {
-		err := DeleteByType(recipe)
+		_, err := DeleteByType(recipe)
 		if err != nil {
 			t.Fatalf("failed to delete recipe at index %d: %v\nRecipe ID: %s", i, err, recipe.GetID())
 		}
