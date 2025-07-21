@@ -85,6 +85,8 @@ func TestCreateGeneric(t *testing.T) {
 		t.Fatalf("failed to create a id: %v", id)
 	}
 
+	testRecipe.ID = id
+
 	if err != nil {
 		t.Fatalf("failed to insert recipe: %v", err)
 	}
@@ -99,7 +101,11 @@ func TestCreateGeneric(t *testing.T) {
 		t.Errorf("expected 1 row after insert")
 	}
 
-	_, _ = DeleteByType(testRecipe)
+	_, err = DeleteByType(testRecipe)
+
+	if err != nil {
+		t.Fatalf("failed to clean up recipe: %v", err)
+	}
 }
 
 func TestUpdateGeneric(t *testing.T) {
@@ -134,9 +140,11 @@ func TestUpdateGeneric(t *testing.T) {
 		t.Errorf("update not applied correctly: %+v", updated)
 	}
 
-	_, _ = DeleteByType(testRecipe)
+	_, err = DeleteByType(testRecipe)
+	if err != nil {
+		t.Fatalf("failed to clean up recipe: %v", err)
+	}
 }
-
 func TestGetMany(t *testing.T) {
 	for i := range testRecipes {
 		id, err := CreateByType(testRecipes[i])
@@ -157,7 +165,7 @@ func TestGetMany(t *testing.T) {
 		t.Fatalf("error getting the count")
 	}
 
-	if count != amount {
+	if count != len(testRecipes) {
 		t.Fatalf("Expecting %d got %d", amount, count)
 	}
 

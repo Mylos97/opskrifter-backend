@@ -10,7 +10,11 @@ import (
 
 func DeleteByType[T types.Identifiable](obj T) (string, error) {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = ?", obj.TableName())
-	_, err := db.DB.Exec(query, obj.GetID())
+	sql, err := db.DB.Exec(query, obj.GetID())
+	rowsAffected, _ := sql.RowsAffected()
+	if rowsAffected != 1 {
+		return "", RowsAffectedZero
+	}
 	return obj.GetID(), err
 }
 
@@ -22,13 +26,23 @@ func GetByType[T types.Identifiable](obj T) (T, error) {
 
 func CreateByType[T types.Identifiable](obj T) (string, error) {
 	query, args, id := buildInsertQuery(obj)
-	_, err := db.DB.Exec(query, args...)
+	sql, err := db.DB.Exec(query, args...)
+	rowsAffected, _ := sql.RowsAffected()
+	if rowsAffected != 1 {
+		return "", RowsAffectedZero
+	}
+
 	return id, err
 }
 
 func UpdateByType[T types.Identifiable](obj T) (string, error) {
 	query, args := buildUpdateQuery(obj)
-	_, err := db.DB.Exec(query, args...)
+	sql, err := db.DB.Exec(query, args...)
+	rowsAffected, _ := sql.RowsAffected()
+	if rowsAffected != 1 {
+		return "", RowsAffectedZero
+	}
+
 	return obj.GetID(), err
 }
 

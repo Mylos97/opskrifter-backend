@@ -23,6 +23,7 @@ type QueryOptions struct {
 }
 
 var ErrMissingParentOrChild = errors.New("missing parent or child tag in struct")
+var RowsAffectedZero = errors.New("expected affected rows to be 1")
 
 func buildInsertQuery(obj any) (string, []any, string) {
 	v := reflect.ValueOf(obj)
