@@ -23,16 +23,17 @@ type QueryOptions struct {
 }
 
 var ErrMissingParentOrChild = errors.New("missing parent or child tag in struct")
-var RowsAffectedZero = errors.New("expected affected rows to be 1")
+var ErrRowsAffectedZero = errors.New("expected affected rows to be 1 got 0")
+var ErrExecutingQuery = errors.New("error executing query")
 
 func buildInsertQuery(obj any) (string, []any, string) {
 	v := reflect.ValueOf(obj)
 	t := reflect.TypeOf(obj)
-
 	columns := []string{}
 	placeholders := []string{}
 	values := []any{}
 	id := uuid.New().String()
+
 	for i := range v.NumField() {
 		field := t.Field(i)
 		dbTag := field.Tag.Get("db")
@@ -55,6 +56,7 @@ func buildInsertQuery(obj any) (string, []any, string) {
 		strings.Join(columns, ", "),
 		strings.Join(placeholders, ", "),
 	)
+
 	return query, values, id
 }
 

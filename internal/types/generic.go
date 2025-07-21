@@ -3,6 +3,9 @@ package types
 type Identifiable interface {
 	GetID() string
 	TableName() string
+}
+
+type HasOneToMany interface {
 	GetOneToMany() [][]OneToMany
 }
 

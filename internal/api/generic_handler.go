@@ -13,7 +13,7 @@ func DeleteByType[T types.Identifiable](obj T) (string, error) {
 	sql, err := db.DB.Exec(query, obj.GetID())
 	rowsAffected, _ := sql.RowsAffected()
 	if rowsAffected != 1 {
-		return "", RowsAffectedZero
+		return "", ErrRowsAffectedZero
 	}
 	return obj.GetID(), err
 }
@@ -27,10 +27,19 @@ func GetByType[T types.Identifiable](obj T) (T, error) {
 func CreateByType[T types.Identifiable](obj T) (string, error) {
 	query, args, id := buildInsertQuery(obj)
 	sql, err := db.DB.Exec(query, args...)
-	rowsAffected, _ := sql.RowsAffected()
-	if rowsAffected != 1 {
-		return "", RowsAffectedZero
+
+	if err != nil {
+		fmt.Printf("CreateByType: insert failed: %v\n", err)
+		return "", err
 	}
+
+	fmt.Printf("id %s", "this is where i die")
+
+	rowsAffected, err := sql.RowsAffected()
+	if rowsAffected != 1 {
+		return "", ErrRowsAffectedZero
+	}
+	fmt.Printf("id %s", "okay i escaped")
 
 	return id, err
 }
@@ -40,7 +49,7 @@ func UpdateByType[T types.Identifiable](obj T) (string, error) {
 	sql, err := db.DB.Exec(query, args...)
 	rowsAffected, _ := sql.RowsAffected()
 	if rowsAffected != 1 {
-		return "", RowsAffectedZero
+		return "", ErrRowsAffectedZero
 	}
 
 	return obj.GetID(), err

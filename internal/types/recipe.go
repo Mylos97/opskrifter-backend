@@ -30,6 +30,12 @@ type Ingredient struct {
 	Name string `json:"name" db:"name"`
 }
 
+func (Ingredient) TableName() string { return "ingredients" }
+
+func (i Ingredient) GetID() string {
+	return i.ID
+}
+
 type RecipeIngredient struct {
 	ID           string `json:"id" db:"id"`
 	RecipeId     string `json:"recipe_id" db:"recipe_id" parent:""`

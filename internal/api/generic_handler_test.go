@@ -7,10 +7,12 @@ import (
 	"testing"
 )
 
-var recipeGenerator = testutils.NewTestDataGenerator[types.Recipe]()
-var testRecipe = recipeGenerator.Generate()
 var amount = 1000
+var recipeGenerator = testutils.NewTestDataGenerator[types.Recipe]()
+var ingredientGenerator = testutils.NewTestDataGenerator[types.Ingredient]()
+var testRecipe = recipeGenerator.Generate()
 var testRecipes = recipeGenerator.GenerateMany(amount)
+var testIngredients = ingredientGenerator.GenerateMany(amount)
 
 func TestDeleteGeneric(t *testing.T) {
 
@@ -188,5 +190,18 @@ func TestGetMany(t *testing.T) {
 }
 
 func TestOneToMany(t *testing.T) {
+	for i := range testIngredients {
+		t.Logf("Creating testIngredients[%d]: %+v", i, testIngredients[i])
 
+		id, err := CreateByType(testIngredients[i])
+		fmt.Printf("id %s", "im confused")
+
+		if id == "" {
+			t.Fatalf("failed to create a id: %v", id)
+		}
+
+		if err != nil {
+			t.Fatalf("failed to insert ingredient at index %d: %v\n Ingredient ID: %s", i, err, id)
+		}
+	}
 }
