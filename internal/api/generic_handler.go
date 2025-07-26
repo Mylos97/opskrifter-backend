@@ -5,49 +5,70 @@ import (
 	"fmt"
 	"net/http"
 	"opskrifter-backend/internal/types"
-	"opskrifter-backend/pkg/db"
+	"opskrifter-backend/pkg/myDB"
 )
 
 func DeleteByType[T types.Identifiable](obj T) (string, error) {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = ?", obj.TableName())
-	sql, err := db.DB.Exec(query, obj.GetID())
-	rowsAffected, _ := sql.RowsAffected()
+	sqlResult, err := myDB.DB.Exec(query, obj.GetID())
+	if err != nil {
+		return "", fmt.Errorf("failed to delete: %w", err)
+	}
+
+	rowsAffected, err := sqlResult.RowsAffected()
+	if err != nil {
+		return "", fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
 	if rowsAffected != 1 {
 		return "", ErrRowsAffectedZero
 	}
-	return obj.GetID(), err
+
+	return obj.GetID(), nil
 }
 
 func GetByType[T types.Identifiable](obj T) (T, error) {
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = ?", obj.TableName())
-	err := db.DB.Get(&obj, query, obj.GetID())
+	err := myDB.DB.Get(&obj, query, obj.GetID())
 	return obj, err
 }
 
 func CreateByType[T types.Identifiable](obj T) (string, error) {
 	query, args, id := buildInsertQuery(obj)
-	sql, err := db.DB.Exec(query, args...)
 
+	// Execute the query and handle errors properly
+	result, err := myDB.DB.Exec(query, args...)
 	if err != nil {
-		fmt.Printf("CreateByType: insert failed: %v\n", err)
-		return "", err
+		return "", fmt.Errorf("failed to execute insert: %w (query: %q)", err, query)
 	}
 
-	fmt.Printf("id %s", "this is where i die")
+	// Check if result is nil (shouldn't happen, but defensive programming)
+	if result == nil {
+		return "", fmt.Errorf("unexpected nil result from Exec()")
+	}
 
-	rowsAffected, err := sql.RowsAffected()
+	// Get rows affected
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return "", fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
 	if rowsAffected != 1 {
-		return "", ErrRowsAffectedZero
+		return "", fmt.Errorf("%w: expected 1 row affected, got %d", ErrRowsAffectedZero, rowsAffected)
 	}
-	fmt.Printf("id %s", "okay i escaped")
 
-	return id, err
+	return id, nil
 }
 
 func UpdateByType[T types.Identifiable](obj T) (string, error) {
 	query, args := buildUpdateQuery(obj)
-	sql, err := db.DB.Exec(query, args...)
-	rowsAffected, _ := sql.RowsAffected()
+	sqlResult, err := myDB.DB.Exec(query, args...)
+
+	if err != nil {
+		return "", fmt.Errorf("failed to update: %w", err)
+	}
+
+	rowsAffected, _ := sqlResult.RowsAffected()
 	if rowsAffected != 1 {
 		return "", ErrRowsAffectedZero
 	}
@@ -57,9 +78,15 @@ func UpdateByType[T types.Identifiable](obj T) (string, error) {
 
 func GetCountByType[T types.Identifiable](obj T) (int, error) {
 	count := 0
-	println(obj.TableName())
 	query := fmt.Sprintf(`SELECT COUNT(*) FROM %s`, obj.TableName())
-	err := db.DB.QueryRow(query).Scan(&count)
+	err := myDB.DB.QueryRow(query).Scan(&count)
+	return count, err
+}
+
+func GetCountByTable(table string) (int, error) {
+	count := 0
+	query := fmt.Sprintf(`SELECT COUNT(*) FROM %s`, table)
+	err := myDB.DB.QueryRow(query).Scan(&count)
 	return count, err
 }
 
@@ -69,7 +96,7 @@ func GetManyByType[T types.Identifiable](opts QueryOptions) ([]T, error) {
 
 	query, args := BuildQuery(zero.TableName(), opts)
 
-	err := db.DB.Select(&objs, query, args...)
+	err := myDB.DB.Select(&objs, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}
@@ -77,17 +104,39 @@ func GetManyByType[T types.Identifiable](opts QueryOptions) ([]T, error) {
 	return objs, nil
 }
 
+func CreateManyByType[T types.Identifiable](elements []T) ([]string, error) {
+	var ids []string
+	for i := range elements {
+		id, err := CreateByType(elements[i])
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
+}
+
+func DeleteManyByType[T types.Identifiable](elements []T) error {
+	for i := range elements {
+		_, err := DeleteByType(elements[i])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func CreateOneToManyByType[T types.Identifiable, E types.OneToMany](obj T, elements []E) error {
 	if len(elements) == 0 {
 		return nil
 	}
 
-	sql, err := buildQueryOneToManyByType(obj, elements)
+	query, err := buildQueryOneToManyByType(obj, elements)
 	if err != nil {
 		return err
 	}
 
-	_, err = db.DB.Exec(sql)
+	_, err = myDB.DB.Exec(query)
 	if err != nil {
 		return fmt.Errorf("query failed: %w", err)
 	}

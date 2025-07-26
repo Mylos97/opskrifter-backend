@@ -10,6 +10,6 @@ type HasOneToMany interface {
 }
 
 type OneToMany interface {
-	GetChildId() string
+	GetChildID() string
 	TableName() string
 }

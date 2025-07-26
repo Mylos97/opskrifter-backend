@@ -1,17 +1,26 @@
 package api
 
 import (
-	"opskrifter-backend/pkg/db"
+	"fmt"
+	"log"
+	"opskrifter-backend/pkg/myDB"
 	"os"
 	"testing"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestMain(m *testing.M) {
-	db.Init(true)
+	err := myDB.Init(true)
+	if err != nil {
+		log.Fatalf("error init DB %s", err)
+	}
 	code := m.Run()
+	var fkEnabled bool
+	err = myDB.DB.QueryRow("PRAGMA foreign_keys;").Scan(&fkEnabled)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Foreign keys enabled: %v\n", fkEnabled)
 
-	db.DB.Close()
+	myDB.DB.Close()
 	os.Exit(code)
 }

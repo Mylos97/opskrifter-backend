@@ -1,6 +1,7 @@
-package db
+package myDB
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,43 +13,30 @@ import (
 
 var DB *sqlx.DB
 
-func findProjectRoot() (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	for {
-		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
-			return dir, nil
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return "", os.ErrNotExist
-		}
-		dir = parent
-	}
-}
-
-func Init(inMemory bool) {
+func Init(inMemory bool) error {
 	var err error
 	dsn := "./app.db"
 	if inMemory {
-		dsn = ":memory:"
+		dsn = ":memory:?_fk=on"
 	}
 
 	DB, err = sqlx.Open("sqlite3", dsn)
 	if err != nil {
-		log.Fatal(err)
+		return err
+	}
+
+	if err = DB.Ping(); err != nil {
+		return fmt.Errorf("failed to ping DB: %w", err)
 	}
 
 	if err := goose.SetDialect("sqlite3"); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	packageRoot, err := findProjectRoot()
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	migrationsDir := filepath.Join(packageRoot, "migrations")
@@ -60,4 +48,6 @@ func Init(inMemory bool) {
 	if err := goose.Up(DB.DB, schemaDir); err != nil {
 		log.Fatalf("failed to run schema migrations: %v", err)
 	}
+
+	return nil
 }

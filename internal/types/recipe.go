@@ -15,9 +15,7 @@ type Recipe struct {
 
 func (Recipe) TableName() string { return "recipes" }
 
-func (r Recipe) GetID() string {
-	return r.ID
-}
+func (r Recipe) GetID() string { return r.ID }
 
 func (r Recipe) GetOneToMany() [][]OneToMany {
 	parts := [][]OneToMany{}
@@ -32,18 +30,16 @@ type Ingredient struct {
 
 func (Ingredient) TableName() string { return "ingredients" }
 
-func (i Ingredient) GetID() string {
-	return i.ID
-}
+func (i Ingredient) GetID() string { return i.ID }
 
 type RecipeIngredient struct {
 	ID           string `json:"id" db:"id"`
-	RecipeId     string `json:"recipe_id" db:"recipe_id" parent:""`
-	IngredientId string `json:"ingredient_id" db:"ingredient_id" child:""`
+	RecipeId     string `json:"recipe_id" db:"recipe_id" parent:"true"`
+	IngredientId string `json:"ingredient_id" db:"ingredient_id" child:"true"`
 }
 
 func (RecipeIngredient) TableName() string { return "ingredients_for_recipe" }
 
-func (ri RecipeIngredient) GetChildId() string {
+func (ri RecipeIngredient) GetChildID() string {
 	return ri.IngredientId
 }

@@ -138,25 +138,31 @@ func buildQueryOneToManyByType[T types.Identifiable, E types.OneToMany](obj T, e
 
 	parts := []string{}
 	for _, e := range elements {
-		parts = append(parts, fmt.Sprintf("(%s, %s)", parent_id, e.GetChildId()))
+		parts = append(parts, fmt.Sprintf("('%s', '%s')", parent_id, e.GetChildID()))
 	}
 
 	query := strings.Join(parts, ", ")
 
-	first := reflect.ValueOf(elements[0]).Elem()
+	first := reflect.ValueOf(elements[0])
 	childType := first.Type()
+	parentCol := ""
+	childCol := ""
 
-	parentDB, found_parent := childType.FieldByName("parent")
-	childDB, found_child := childType.FieldByName("child")
-
-	if !found_parent || !found_child {
-		return "", ErrMissingParentOrChild
+	for i := range childType.NumField() {
+		field := childType.Field(i)
+		if _, hasParent := field.Tag.Lookup("parent"); hasParent {
+			parentCol = field.Tag.Get("db")
+		}
+		if _, hasChild := field.Tag.Lookup("child"); hasChild {
+			childCol = field.Tag.Get("db")
+		}
 	}
 
-	parent_col := parentDB.Tag.Get("db")
-	child_col := childDB.Tag.Get("db")
+	if parentCol == "" || childCol == "" {
+		return "", fmt.Errorf("missing parent or child tag in struct")
+	}
 
-	sql := fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES %s", relation_table, parent_col, child_col, query)
+	sql := fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES %s", relation_table, parentCol, childCol, query)
 
 	return sql, nil
 }

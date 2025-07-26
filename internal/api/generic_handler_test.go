@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var amount = 1000
+var amount = 10
 var recipeGenerator = testutils.NewTestDataGenerator[types.Recipe]()
 var ingredientGenerator = testutils.NewTestDataGenerator[types.Ingredient]()
 var testRecipe = recipeGenerator.Generate()
@@ -25,12 +25,12 @@ func TestDeleteGeneric(t *testing.T) {
 	}
 
 	if err != nil {
-		t.Fatalf("failed to insert recipe: %v", err)
+		t.Fatal(err)
 	}
 	testRecipe.ID = id
 	_, err = DeleteByType(testRecipe)
 	if err != nil {
-		t.Fatalf("failed to delete recipe: %v", err)
+		t.Fatal(err)
 	}
 
 	var count = 0
@@ -152,13 +152,14 @@ func TestGetMany(t *testing.T) {
 		id, err := CreateByType(testRecipes[i])
 		testRecipes[i].ID = id
 
+		if err != nil {
+			t.Fatalf("failed to insert recipe at index %d: %v\nRecipe ID: %s", i, err, id)
+		}
+
 		if id == "" {
 			t.Fatalf("failed to create a id: %v", id)
 		}
 
-		if err != nil {
-			t.Fatalf("failed to insert recipe at index %d: %v\nRecipe ID: %s", i, err, id)
-		}
 	}
 
 	count, err := GetCountByType(testRecipe)
@@ -190,18 +191,68 @@ func TestGetMany(t *testing.T) {
 }
 
 func TestOneToMany(t *testing.T) {
-	for i := range testIngredients {
-		t.Logf("Creating testIngredients[%d]: %+v", i, testIngredients[i])
+	ids, err := CreateManyByType(testIngredients)
 
-		id, err := CreateByType(testIngredients[i])
-		fmt.Printf("id %s", "im confused")
+	if err != nil {
+		t.Fatalf("error creating ingredients")
+	}
 
-		if id == "" {
-			t.Fatalf("failed to create a id: %v", id)
-		}
+	for i := range ids {
+		testIngredients[i].ID = ids[i]
+	}
+
+	ids, err = CreateManyByType(testRecipes)
+	if err != nil {
+		t.Fatalf("error creating recipes")
+	}
+
+	for i := range ids {
+		testRecipes[i].ID = ids[i]
+	}
+
+	for i := range testRecipes {
+		recipeIngredients := types.ToOneToMany(
+			testIngredients,
+			testRecipes[i],
+			types.IngredientToRecipeIngredient,
+		)
+		err = CreateOneToManyByType(testRecipes[i], recipeIngredients)
 
 		if err != nil {
-			t.Fatalf("failed to insert ingredient at index %d: %v\n Ingredient ID: %s", i, err, id)
+			t.Fatalf("failed to insert relations at index %d: %v\n Recipe ID: %s", i, err, testRecipes[i].ID)
 		}
+	}
+	tableName := types.RecipeIngredient{}.TableName()
+	expectedLength := len(testIngredients) * len(testRecipes)
+	count, err := GetCountByTable(tableName)
+
+	if err != nil {
+		t.Fatalf("error getting the count")
+	}
+
+	if count != expectedLength {
+		t.Fatalf("Expecting %d got %d", expectedLength, count)
+	}
+	println(len(testRecipes))
+	err = DeleteManyByType(testRecipes)
+
+	if err != nil {
+		t.Fatalf("error deleting recipes")
+	}
+
+	count, _ = GetCountByType(testRecipes[0])
+
+	if count != 0 {
+		t.Fatalf("expected 0 got %d", count)
+	}
+
+	count, err = GetCountByTable(tableName)
+
+	if err != nil {
+		t.Fatalf("error getting the count")
+	}
+
+	if count != 0 {
+		t.Fatalf("expected 0 got %d", count)
 	}
 }

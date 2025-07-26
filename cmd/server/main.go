@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"opskrifter-backend/internal/api"
 	"opskrifter-backend/internal/middleware"
-	"opskrifter-backend/pkg/db"
+	"opskrifter-backend/pkg/myDB"
 	"os"
 
 	"github.com/go-chi/chi/v5"
@@ -15,12 +15,10 @@ func main() {
 	port := os.Getenv("PORT")
 
 	isProd := port != "8080"
-	db.Init(isProd)
-
-	if _, err := db.DB.Exec("PRAGMA foreign_keys = ON"); err != nil {
-		log.Fatalf("failed to enable foreign key constraints: %v", err)
+	err := myDB.Init(isProd)
+	if err != nil {
+		log.Fatalf("error init DB %v", err)
 	}
-
 	r := chi.NewRouter()
 
 	if isProd {
