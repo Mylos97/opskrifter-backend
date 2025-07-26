@@ -49,5 +49,15 @@ func Init(inMemory bool) error {
 		log.Fatalf("failed to run schema migrations: %v", err)
 	}
 
+	var fkEnabled int
+	err = DB.QueryRow("PRAGMA foreign_keys;").Scan(&fkEnabled)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if fkEnabled != 1 {
+		return fmt.Errorf("expected _fk to be 1 got %d", fkEnabled)
+	}
+
 	return nil
 }

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"opskrifter-backend/internal/testutils"
 	"opskrifter-backend/internal/types"
 	"testing"
@@ -15,10 +14,7 @@ var testRecipes = recipeGenerator.GenerateMany(amount)
 var testIngredients = ingredientGenerator.GenerateMany(amount)
 
 func TestDeleteGeneric(t *testing.T) {
-
 	id, err := CreateByType(testRecipe)
-
-	fmt.Printf("Inserting into table %s with ID: %s\n", testRecipe.TableName(), id)
 
 	if id == "" {
 		t.Fatalf("failed to create a id: %v", id)
@@ -46,8 +42,6 @@ func TestDeleteGeneric(t *testing.T) {
 
 func TestGetGeneric(t *testing.T) {
 	id, err := CreateByType(testRecipe)
-
-	fmt.Printf("Inserting into table %s with ID: %s\n", testRecipe.TableName(), testRecipe.ID)
 
 	if id == "" {
 		t.Fatalf("failed to create a id: %v", id)
@@ -79,8 +73,6 @@ func TestGetGeneric(t *testing.T) {
 }
 
 func TestCreateGeneric(t *testing.T) {
-	fmt.Printf("Inserting into table %s with ID: %s\n", testRecipe.TableName(), testRecipe.ID)
-
 	id, err := CreateByType(testRecipe)
 
 	if id == "" {
@@ -233,7 +225,7 @@ func TestOneToMany(t *testing.T) {
 	if count != expectedLength {
 		t.Fatalf("Expecting %d got %d", expectedLength, count)
 	}
-	println(len(testRecipes))
+
 	err = DeleteManyByType(testRecipes)
 
 	if err != nil {

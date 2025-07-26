@@ -35,19 +35,15 @@ func GetByType[T types.Identifiable](obj T) (T, error) {
 
 func CreateByType[T types.Identifiable](obj T) (string, error) {
 	query, args, id := buildInsertQuery(obj)
-
-	// Execute the query and handle errors properly
 	result, err := myDB.DB.Exec(query, args...)
 	if err != nil {
 		return "", fmt.Errorf("failed to execute insert: %w (query: %q)", err, query)
 	}
 
-	// Check if result is nil (shouldn't happen, but defensive programming)
 	if result == nil {
 		return "", fmt.Errorf("unexpected nil result from Exec()")
 	}
 
-	// Get rows affected
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return "", fmt.Errorf("failed to get rows affected: %w", err)
