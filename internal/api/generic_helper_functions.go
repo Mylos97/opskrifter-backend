@@ -132,13 +132,12 @@ func BuildQuery(tableName string, opts QueryOptions) (string, []any) {
 	return query, args
 }
 
-func buildQueryOneToManyByType[T types.Identifiable, E types.OneToMany](obj T, elements []E) (string, error) {
-	parent_id := obj.GetID()
+func buildQueryOneToManyByType[E types.OneToMany](parentID string, elements []E) (string, error) {
 	relation_table := elements[0].TableName()
 
 	parts := []string{}
 	for _, e := range elements {
-		parts = append(parts, fmt.Sprintf("('%s', '%s')", parent_id, e.GetChildID()))
+		parts = append(parts, fmt.Sprintf("('%s', '%s')", parentID, e.GetChildID()))
 	}
 
 	query := strings.Join(parts, ", ")

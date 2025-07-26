@@ -13,3 +13,8 @@ type OneToMany interface {
 	GetChildID() string
 	TableName() string
 }
+
+type IdentifiableWithRelations interface {
+	Identifiable
+	HasOneToMany
+}

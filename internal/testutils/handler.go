@@ -31,6 +31,19 @@ func AssertCountByType[T types.Identifiable](expected int, getFunc func(T) (int,
 	return nil
 }
 
+func AssertCountByTable(expected int, tableName string, getFunc func(string) (int, error)) error {
+	count, err := getFunc(tableName)
+	if err != nil {
+		return fmt.Errorf("failed to get count: %w", err)
+	}
+
+	if count != expected {
+		return fmt.Errorf("expected count to be %d, got %d", expected, count)
+	}
+
+	return nil
+}
+
 func EqualByValue[T types.Identifiable](want, got T) error {
 	if !reflect.DeepEqual(want, got) {
 		return fmt.Errorf("structs are not equal\nWant: %+v\nGot:  %+v", want, got)

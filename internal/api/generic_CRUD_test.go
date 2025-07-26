@@ -30,14 +30,10 @@ func TestDeleteGeneric(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var count = 0
-	count, err = GetCountByType(testRecipe)
+	err = testutils.AssertCountByType[types.Recipe](0, GetCountByType)
 
 	if err != nil {
-		t.Fatalf("failed to verify deletion: %v", err)
-	}
-	if count != 0 {
-		t.Errorf("expected 0 rows after delete, found %d", count)
+		t.Fatalf("failed to get the count %v", err)
 	}
 }
 
@@ -85,15 +81,10 @@ func TestCreateGeneric(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to insert recipe: %v", err)
 	}
-	var count = 0
-	count, err = GetCountByType(testRecipe)
+	err = testutils.AssertCountByType[types.Recipe](1, GetCountByType)
 
 	if err != nil {
-		t.Fatalf("failed to verify insert: %v", err)
-	}
-
-	if count != 1 {
-		t.Errorf("expected 1 row after insert")
+		t.Fatalf("failed to get the count %v", err)
 	}
 
 	_, err = DeleteByType(testRecipe)
@@ -155,14 +146,10 @@ func TestGetMany(t *testing.T) {
 
 	}
 
-	count, err := GetCountByType(testRecipe)
+	err := testutils.AssertCountByType[types.Recipe](len(testRecipes), GetCountByType)
 
 	if err != nil {
-		t.Fatalf("error getting the count")
-	}
-
-	if count != len(testRecipes) {
-		t.Fatalf("Expecting %d got %d", amount, count)
+		t.Fatalf("failed to get the count %v", err)
 	}
 
 	for i, recipe := range testRecipes {
@@ -172,14 +159,10 @@ func TestGetMany(t *testing.T) {
 		}
 	}
 
-	count, err = GetCountByType(testRecipe)
+	err = testutils.AssertCountByType[types.Recipe](0, GetCountByType)
 
 	if err != nil {
-		t.Fatalf("error getting the count")
-	}
-
-	if count != 0 {
-		t.Fatalf("Expecting 0 got %d", count)
+		t.Fatalf("failed to get the count %v", err)
 	}
 }
 
@@ -209,22 +192,19 @@ func TestOneToMany(t *testing.T) {
 			testRecipes[i],
 			types.IngredientToRecipeIngredient,
 		)
-		err = CreateOneToManyByType(testRecipes[i], recipeIngredients)
+		err = CreateOneToManyByType(testRecipes[i], testRecipes[i].ID, recipeIngredients)
 
 		if err != nil {
 			t.Fatalf("failed to insert relations at index %d: %v\n Recipe ID: %s", i, err, testRecipes[i].ID)
 		}
 	}
 	tableName := types.RecipeIngredient{}.TableName()
+
 	expectedLength := len(testIngredients) * len(testRecipes)
-	count, err := GetCountByTable(tableName)
+	err = testutils.AssertCountByTable(expectedLength, tableName, GetCountByTable)
 
 	if err != nil {
-		t.Fatalf("error getting the count")
-	}
-
-	if count != expectedLength {
-		t.Fatalf("Expecting %d got %d", expectedLength, count)
+		t.Fatalf("failed to get the count %v", err)
 	}
 
 	err = DeleteManyByType(testRecipes)
@@ -233,19 +213,65 @@ func TestOneToMany(t *testing.T) {
 		t.Fatalf("error deleting recipes")
 	}
 
-	count, _ = GetCountByType(testRecipes[0])
-
-	if count != 0 {
-		t.Fatalf("expected 0 got %d", count)
-	}
-
-	count, err = GetCountByTable(tableName)
+	err = testutils.AssertCountByTable(0, tableName, GetCountByTable)
 
 	if err != nil {
-		t.Fatalf("error getting the count")
+		t.Fatalf("failed to get the count %v", err)
+	}
+}
+
+func TestCreateByTypeWithRelations(t *testing.T) {
+	ids, err := CreateManyByType(testIngredients)
+	if err != nil {
+		t.Fatalf("error creating ingredients")
 	}
 
-	if count != 0 {
-		t.Fatalf("expected 0 got %d", count)
+	for i := range ids {
+		testIngredients[i].ID = ids[i]
+	}
+
+	recipeIngredients := types.ToOneToMany(
+		testIngredients,
+		testRecipe,
+		types.IngredientToRecipeIngredient,
+	)
+
+	testRecipe.RecipeIngredients = recipeIngredients
+	id, err := CreateByTypeWithRelations(testRecipe)
+	tableName := types.RecipeIngredient{}.TableName()
+
+	if err != nil {
+		t.Fatalf("error creating recipe with relations %v", err)
+	}
+
+	if id == "" {
+		t.Fatalf("error generating a ID")
+	}
+
+	testRecipe.ID = id
+
+	expectedLength := len(testIngredients)
+	err = testutils.AssertCountByTable(expectedLength, tableName, GetCountByTable)
+
+	if err != nil {
+		t.Fatalf("failed to get the count %v", err)
+	}
+
+	_, err = DeleteByType(testRecipe)
+
+	if err != nil {
+		t.Fatalf("error deleting recipes %v", err)
+	}
+
+	err = testutils.AssertCountByType[types.Recipe](0, GetCountByType)
+
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	err = testutils.AssertCountByTable(0, tableName, GetCountByTable)
+
+	if err != nil {
+		t.Fatalf("failed to get the count %v", err)
 	}
 }
