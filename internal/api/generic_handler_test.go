@@ -8,14 +8,11 @@ import (
 	"net/http"
 	"opskrifter-backend/internal/testutils"
 	"opskrifter-backend/internal/types"
-	"os"
 	"testing"
 )
 
-var handlerRecipe = recipeGenerator.Generate()
-
 func TestCreateHandlerByType(t *testing.T) {
-	data, err := os.ReadFile("../testdata/recipe.json")
+	data, err := json.Marshal(testRecipe)
 	if err != nil {
 		t.Fatalf("failed to read input file: %v", err)
 	}

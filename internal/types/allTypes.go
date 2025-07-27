@@ -34,9 +34,9 @@ func (Ingredient) TableName() string { return "ingredients" }
 func (i Ingredient) GetID() string { return i.ID }
 
 type RecipeIngredient struct {
-	ID           string `json:"id" db:"id"`
 	RecipeId     string `json:"recipe_id" db:"recipe_id" parent:"true"`
 	IngredientId string `json:"ingredient_id" db:"ingredient_id" child:"true"`
+	Amount       string `json:"amount" db:"amount"`
 }
 
 func (RecipeIngredient) TableName() string { return "ingredients_for_recipe" }
@@ -44,3 +44,15 @@ func (RecipeIngredient) TableName() string { return "ingredients_for_recipe" }
 func (ri RecipeIngredient) GetChildID() string {
 	return ri.IngredientId
 }
+
+type User struct {
+	ID        string `json:"id" db:"id"`
+	Name      string `json:"name" db:"name"`
+	Email     string `json:"email" db:"email"`
+	Status    string `json:"status" db:"status"`
+	CreatedAt string `json:"created_at" db:"created_at"`
+}
+
+func (User) TableName() string { return "users" }
+
+func (u User) GetID() string { return u.ID }

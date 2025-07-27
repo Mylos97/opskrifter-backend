@@ -8,13 +8,15 @@ import (
 )
 
 type TestDataGenerator[T types.Identifiable] struct {
-	rng *rand.Rand
+	rng     *rand.Rand
+	adminID string
 }
 
-func NewTestDataGenerator[T types.Identifiable]() *TestDataGenerator[T] {
+func NewTestDataGenerator[T types.Identifiable](adminID string) *TestDataGenerator[T] {
 	src := rand.NewSource(time.Now().UnixNano())
 	return &TestDataGenerator[T]{
-		rng: rand.New(src),
+		rng:     rand.New(src),
+		adminID: adminID,
 	}
 }
 
@@ -32,6 +34,11 @@ func (g *TestDataGenerator[T]) Generate() T {
 		}
 
 		if t.Field(i).Name == "ID" {
+			continue
+		}
+
+		if t.Field(i).Name == "UserID" {
+			field.SetString(g.adminID)
 			continue
 		}
 

@@ -115,35 +115,50 @@ func BuildQuery(tableName string, opts QueryOptions) (string, []any) {
 }
 
 func buildQueryOneToManyByType[E types.OneToMany](parentID string, elements []E) (string, error) {
-	relation_table := elements[0].TableName()
-
-	parts := []string{}
-	for _, e := range elements {
-		parts = append(parts, fmt.Sprintf("('%s', '%s')", parentID, e.GetChildID()))
-	}
-
-	query := strings.Join(parts, ", ")
-
+	relationTable := elements[0].TableName()
 	first := reflect.ValueOf(elements[0])
-	childType := first.Type()
-	parentCol := ""
-	childCol := ""
+	elemType := first.Type()
 
-	for i := range childType.NumField() {
-		field := childType.Field(i)
-		if _, hasParent := field.Tag.Lookup("parent"); hasParent {
-			parentCol = field.Tag.Get("db")
-		}
-		if _, hasChild := field.Tag.Lookup("child"); hasChild {
-			childCol = field.Tag.Get("db")
+	var columnNames []string
+	var valueRows []string
+
+	for i := 0; i < elemType.NumField(); i++ {
+		field := elemType.Field(i)
+		dbTag := field.Tag.Get("db")
+		if dbTag != "" {
+			columnNames = append(columnNames, dbTag)
 		}
 	}
 
-	if parentCol == "" || childCol == "" {
-		return "", fmt.Errorf("missing parent or child tag in struct")
+	for _, element := range elements {
+		val := reflect.ValueOf(element)
+		var rowValues []string
+
+		for i := 0; i < elemType.NumField(); i++ {
+			field := elemType.Field(i)
+			dbTag := field.Tag.Get("db")
+			if dbTag == "" {
+				continue
+			}
+
+			fieldValue := val.Field(i)
+			if _, isParent := field.Tag.Lookup("parent"); isParent {
+				rowValues = append(rowValues, fmt.Sprintf("'%s'", parentID))
+			} else {
+				rowValues = append(rowValues, fmt.Sprintf("'%v'", fieldValue.Interface()))
+			}
+		}
+
+		valueRows = append(valueRows, fmt.Sprintf("(%s)", strings.Join(rowValues, ", ")))
 	}
 
-	sql := fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES %s", relation_table, parentCol, childCol, query)
+	// Step 3: Final query
+	query := fmt.Sprintf(
+		"INSERT INTO %s (%s) VALUES %s",
+		relationTable,
+		strings.Join(columnNames, ", "),
+		strings.Join(valueRows, ", "),
+	)
 
-	return sql, nil
+	return query, nil
 }
