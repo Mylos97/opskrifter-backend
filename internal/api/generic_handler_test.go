@@ -4,20 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"opskrifter-backend/internal/testutils"
 	"opskrifter-backend/internal/types"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCreateHandlerByType(t *testing.T) {
 	data, err := json.Marshal(testRecipe)
-	if err != nil {
-		t.Fatalf("failed to read input file: %v", err)
-	}
+	require.NoError(t, err, "failed to marshal testRecipe")
 
 	req, rec := testutils.NewJSONPostRequest(data)
 	CreateRecipe.ServeHTTP(rec, req)
@@ -28,57 +26,27 @@ func TestCreateHandlerByType(t *testing.T) {
 	require.Equal(t, http.StatusOK, resp.StatusCode, "expected status 200 OK")
 
 	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("failed to read response body: %v", err)
-	}
+	require.NoError(t, err, "failed to read response body")
 
 	var response Response
-	if err := json.Unmarshal(body, &response); err != nil {
-		t.Fatalf("failed to unmarshal response JSON: %v", err)
-	}
+	require.NoError(t, json.Unmarshal(body, &response), "failed to unmarshal response JSON")
+	require.NotEmpty(t, response.ID, "expected non-empty id field in response")
+	require.NoError(t, testutils.AssertCountByType[types.Recipe](1, GetCountByType))
 
-	if response.ID == "" {
-		t.Errorf("expected non-empty id field in response")
-	}
-
-	err = testutils.AssertCountByType[types.Recipe](1, GetCountByType)
-
-	if err != nil {
-		t.Fatalf("failed to get the count %v", err)
-	}
-
-	var recipe types.Recipe
-	recipe.ID = response.ID
+	recipe := types.Recipe{ID: response.ID}
 	_, err = DeleteByType(recipe)
-
-	if err != nil {
-		t.Errorf("failed to delete recipe")
-	}
-
-	err = testutils.AssertCountByType[types.Recipe](0, GetCountByType)
-
-	if err != nil {
-		t.Fatalf("failed to get the count %v", err)
-	}
+	require.NoError(t, err, "failed to delete recipe")
+	require.NoError(t, testutils.AssertCountByType[types.Recipe](0, GetCountByType))
 }
 
 func TestDeleteHandlerByType(t *testing.T) {
 	id, err := CreateByType(handlerRecipe)
-
-	if err != nil {
-		t.Fatalf("failed to create recipe")
-	}
-
-	if id == "" {
-		t.Fatalf("failed to generate id")
-	}
-
+	require.NoError(t, err, "failed to create recipe")
+	require.NotEmpty(t, id, "failed to generate id")
 	handlerRecipe.ID = id
 
 	data, err := json.Marshal(handlerRecipe)
-	if err != nil {
-		t.Fatalf("failed to marshal handlerRecipe: %v", err)
-	}
+	require.NoError(t, err, "failed to marshal handlerRecipe")
 
 	req, rec := testutils.NewJSONPostRequest(data)
 	DeleteRecipe.ServeHTTP(rec, req)
@@ -89,44 +57,25 @@ func TestDeleteHandlerByType(t *testing.T) {
 	require.Equal(t, http.StatusOK, resp.StatusCode, "expected status 200 OK")
 
 	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("failed to read response body: %v", err)
-	}
+	require.NoError(t, err, "failed to read response body")
 
 	var response Response
-	if err := json.Unmarshal(body, &response); err != nil {
-		t.Fatalf("failed to unmarshal response JSON: %v", err)
-	}
+	require.NoError(t, json.Unmarshal(body, &response), "failed to unmarshal response JSON")
+	require.NotEmpty(t, response.ID, "expected non-empty id field in response")
+	require.NoError(t, testutils.AssertCountByType[types.Recipe](0, GetCountByType))
 
-	if response.ID == "" {
-		t.Errorf("expected non-empty id field in response")
-	}
-
-	err = testutils.AssertCountByType[types.Recipe](0, GetCountByType)
-
-	if err != nil {
-		t.Fatalf("failed get the count %v", err)
-	}
 }
 
 func TestUpdateHandlerByType(t *testing.T) {
 	id, err := CreateByType(handlerRecipe)
-
-	if err != nil {
-		t.Fatalf("failed to create recipe")
-	}
-
-	if id == "" {
-		t.Fatalf("failed to generate id")
-	}
+	require.NoError(t, err, "failed to create recipe")
+	require.NotEmpty(t, id, "failed to generate id")
 
 	updatedRecipe := recipeGenerator.Generate()
 	updatedRecipe.ID = id
 
 	data, err := json.Marshal(updatedRecipe)
-	if err != nil {
-		t.Fatalf("failed to marshal handlerRecipe: %v", err)
-	}
+	require.NoError(t, err, "failed to marshal updatedRecipe")
 
 	req, rec := testutils.NewJSONPostRequest(data)
 	UpdateRecipe.ServeHTTP(rec, req)
@@ -137,34 +86,23 @@ func TestUpdateHandlerByType(t *testing.T) {
 	require.Equal(t, http.StatusOK, resp.StatusCode, "expected status 200 OK")
 
 	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("failed to read response body: %v", err)
-	}
+	require.NoError(t, err, "failed to read response body")
 
 	var response Response
-	if err := json.Unmarshal(body, &response); err != nil {
-		t.Fatalf("failed to unmarshal response JSON: %v", err)
-	}
+	require.NoError(t, json.Unmarshal(body, &response), "failed to unmarshal response JSON")
 
-	if response.ID == "" {
-		t.Errorf("expected non-empty id field in response")
-	}
+	require.NotEmpty(t, response.ID, "expected non-empty id field in response")
 
-	err = testutils.AssertCountByType[types.Recipe](1, GetCountByType)
-
-	if err != nil {
-		t.Fatalf("failed get the count %v", err)
-	}
+	require.NoError(t, testutils.AssertCountByType[types.Recipe](1, GetCountByType), "failed to get the count")
 
 	updated, err := GetByType(updatedRecipe)
-
-	if err != nil {
-		log.Fatalf("error updating recipe")
-	}
+	require.NoError(t, err, "error fetching updated recipe")
 
 	testutils.EqualByValue(updatedRecipe, updated)
+
 	_, err = DeleteByType(updatedRecipe)
 	require.NoError(t, err, "error deleting recipe")
+
 }
 
 func TestGetManyHandlerByType(t *testing.T) {
@@ -234,9 +172,7 @@ func TestGetManyHandlerByType(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			data, err := json.Marshal(tc.query)
-			if err != nil {
-				t.Fatalf("failed to marshal query: %v", err)
-			}
+			require.NoError(t, err, "failed to marshal query")
 
 			req, rec := testutils.NewJSONPostRequest(data)
 			GetManyRecipe.ServeHTTP(rec, req)
@@ -245,41 +181,27 @@ func TestGetManyHandlerByType(t *testing.T) {
 			defer resp.Body.Close()
 
 			if tc.expectError {
-				if resp.StatusCode == http.StatusOK {
-					t.Error("expected error status code, got 200")
-				}
+				assert.NotEqual(t, http.StatusOK, resp.StatusCode, "expected error status code, got 200")
 				return
 			}
 
-			if resp.StatusCode != http.StatusOK {
-				t.Fatalf("expected status 200, got %d", resp.StatusCode)
-			}
+			require.Equal(t, http.StatusOK, resp.StatusCode, "expected status 200")
 
 			body, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Fatalf("failed to read response body: %v", err)
-			}
+			require.NoError(t, err, "failed to read response body")
 
 			var objs []types.Recipe
-			if err := json.Unmarshal(body, &objs); err != nil {
-				t.Fatalf("failed to unmarshal response JSON: %v", err)
-			}
+			require.NoError(t, json.Unmarshal(body, &objs), "failed to unmarshal response JSON")
 
-			if tc.expectedLen != len(objs) {
-				t.Fatalf("expected %d items, got %d", tc.expectedLen, len(objs))
-			}
+			require.Equal(t, tc.expectedLen, len(objs), "unexpected number of items")
 
 			if tc.validate != nil {
-				if err := tc.validate(objs); err != nil {
-					t.Errorf("validation failed: %v", err)
-				}
+				err = tc.validate(objs)
+				assert.NoError(t, err, "validation failed")
 			}
 		})
 	}
 
 	err = DeleteManyByType(testRecipes)
-
-	if err != nil {
-		t.Fatalf("error deleting recipes %v", err)
-	}
+	require.NoError(t, err, "error deleting recipes")
 }
