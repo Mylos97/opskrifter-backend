@@ -1,5 +1,6 @@
 package types
 
+// Recipe
 type Recipe struct {
 	ID                string `json:"id" db:"id"`
 	Name              string `json:"name" db:"name"`
@@ -15,36 +16,14 @@ type Recipe struct {
 }
 
 func (Recipe) TableName() string { return "recipes" }
-
-func (r Recipe) GetID() string { return r.ID }
-
+func (r Recipe) GetID() string   { return r.ID }
 func (r Recipe) GetOneToMany() [][]OneToMany {
 	parts := [][]OneToMany{}
 	parts = append(parts, ToInterfaceSlice(r.RecipeIngredients))
 	return parts
 }
 
-type Ingredient struct {
-	ID   string `json:"id" db:"id"`
-	Name string `json:"name" db:"name"`
-}
-
-func (Ingredient) TableName() string { return "ingredients" }
-
-func (i Ingredient) GetID() string { return i.ID }
-
-type RecipeIngredient struct {
-	RecipeId     string `json:"recipe_id" db:"recipe_id" parent:"true"`
-	IngredientId string `json:"ingredient_id" db:"ingredient_id" child:"true"`
-	Amount       string `json:"amount" db:"amount"`
-}
-
-func (RecipeIngredient) TableName() string { return "ingredients_for_recipe" }
-
-func (ri RecipeIngredient) GetChildID() string {
-	return ri.IngredientId
-}
-
+// User
 type User struct {
 	ID        string `json:"id" db:"id"`
 	Name      string `json:"name" db:"name"`
@@ -54,5 +33,32 @@ type User struct {
 }
 
 func (User) TableName() string { return "users" }
+func (u User) GetID() string   { return u.ID }
 
-func (u User) GetID() string { return u.ID }
+// UserLikedRecipe
+type UserLikedRecipe struct {
+	UserID   string `json:"user_id" db:"user_id"`
+	RecipeID string `json:"recipe_id" db:"recipe_id"`
+}
+
+func (UserLikedRecipe) TableName() string      { return "user_liked_recipes" }
+func (ulr UserLikedRecipe) GetChildID() string { return ulr.RecipeID }
+
+// Ingredient
+type Ingredient struct {
+	ID   string `json:"id" db:"id"`
+	Name string `json:"name" db:"name"`
+}
+
+func (Ingredient) TableName() string { return "ingredients" }
+func (i Ingredient) GetID() string   { return i.ID }
+
+// RecipeIngredient
+type RecipeIngredient struct {
+	RecipeId     string `json:"recipe_id" db:"recipe_id" parent:"true"`
+	IngredientId string `json:"ingredient_id" db:"ingredient_id" child:"true"`
+	Amount       string `json:"amount" db:"amount"`
+}
+
+func (RecipeIngredient) TableName() string     { return "ingredients_for_recipe" }
+func (ri RecipeIngredient) GetChildID() string { return ri.IngredientId }

@@ -2,11 +2,14 @@ package api
 
 import (
 	"log"
+	"net/http"
 	"opskrifter-backend/internal/testutils"
 	"opskrifter-backend/internal/types"
 	"opskrifter-backend/pkg/myDB"
 	"os"
 	"testing"
+
+	"github.com/go-chi/chi/v5"
 )
 
 var adminUser = types.User{
@@ -23,6 +26,7 @@ var (
 	handlerRecipe       types.Recipe
 	testRecipes         []types.Recipe
 	testIngredients     []types.Ingredient
+	testRouter          http.Handler
 	amount              int
 )
 
@@ -54,4 +58,7 @@ func setupTestData() {
 	handlerRecipe = recipeGenerator.Generate()
 
 	testIngredients = ingredientGenerator.GenerateMany(amount)
+	r := chi.NewRouter()
+	setupRouter(r)
+	testRouter = r
 }

@@ -18,10 +18,14 @@ func RegisterRoutes(r *chi.Mux) {
 		w.Write([]byte("OK"))
 	})
 
+	setupRouter(r)
+}
+
+func setupRouter(r *chi.Mux) {
 	r.Route("/recipes", func(r chi.Router) {
 		r.Post("/", CreateRecipe)
 		r.Get("/{id}", GetRecipe)
-		r.Put("/{id}", UpdateRecipe)
+		r.Put("/", UpdateRecipe)
 		r.Delete("/{id}", DeleteRecipe)
 	})
 }

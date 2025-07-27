@@ -1,7 +1,9 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"opskrifter-backend/internal/types"
@@ -61,6 +63,12 @@ func GetHandlerByType[T types.Identifiable](getFunc GetFunc[T]) http.HandlerFunc
 		}
 
 		result, err := getFunc(obj)
+
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+
 		if err != nil {
 			http.Error(w, "operation failed: "+err.Error(), http.StatusInternalServerError)
 			return

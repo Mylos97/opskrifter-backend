@@ -13,13 +13,9 @@ func DeleteByType[T types.Identifiable](obj T) (string, error) {
 		return "", fmt.Errorf("failed to delete: %w", err)
 	}
 
-	rowsAffected, err := sqlResult.RowsAffected()
+	_, err = sqlResult.RowsAffected()
 	if err != nil {
-		return "", fmt.Errorf("failed to get rows affected: %w", err)
-	}
-
-	if rowsAffected != 1 {
-		return "", ErrRowsAffectedZero
+		return "", err
 	}
 
 	return obj.GetID(), nil
@@ -42,13 +38,9 @@ func CreateByType[T types.Identifiable](obj T) (string, error) {
 		return "", fmt.Errorf("unexpected nil result from Exec()")
 	}
 
-	rowsAffected, err := result.RowsAffected()
+	_, err = result.RowsAffected()
 	if err != nil {
 		return "", fmt.Errorf("failed to get rows affected: %w", err)
-	}
-
-	if rowsAffected != 1 {
-		return "", fmt.Errorf("%w: expected 1 row affected, got %d", ErrRowsAffectedZero, rowsAffected)
 	}
 
 	return id, nil

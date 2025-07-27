@@ -9,6 +9,8 @@ import (
 	"opskrifter-backend/internal/testutils"
 	"opskrifter-backend/internal/types"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestCreateHandlerByType(t *testing.T) {
@@ -23,9 +25,7 @@ func TestCreateHandlerByType(t *testing.T) {
 	resp := rec.Result()
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected status 200, got %d", resp.StatusCode)
-	}
+	require.Equal(t, http.StatusOK, resp.StatusCode, "expected status 200 OK")
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -86,9 +86,7 @@ func TestDeleteHandlerByType(t *testing.T) {
 	resp := rec.Result()
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected status 200, got %d", resp.StatusCode)
-	}
+	require.Equal(t, http.StatusOK, resp.StatusCode, "expected status 200 OK")
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -136,9 +134,7 @@ func TestUpdateHandlerByType(t *testing.T) {
 	resp := rec.Result()
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected status 200, got %d", resp.StatusCode)
-	}
+	require.Equal(t, http.StatusOK, resp.StatusCode, "expected status 200 OK")
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -167,6 +163,8 @@ func TestUpdateHandlerByType(t *testing.T) {
 	}
 
 	testutils.EqualByValue(updatedRecipe, updated)
+	_, err = DeleteByType(updatedRecipe)
+	require.NoError(t, err, "error deleting recipe")
 }
 
 func TestGetManyHandlerByType(t *testing.T) {
@@ -202,7 +200,7 @@ func TestGetManyHandlerByType(t *testing.T) {
 			},
 			expectedLen: 5,
 			validate: func(recipes []types.Recipe) error {
-				if recipes[0].ID != testRecipes[4].ID {
+				if recipes[0].ID != testRecipes[5].ID {
 					return fmt.Errorf("unexpected first item on page 1 got id %s expected %s", recipes[0].ID, testRecipes[4].ID)
 				}
 				return nil

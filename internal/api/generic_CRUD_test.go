@@ -1,23 +1,18 @@
 package api
 
 import (
-	"fmt"
 	"opskrifter-backend/internal/testutils"
 	"opskrifter-backend/internal/types"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDeleteGeneric(t *testing.T) {
-	fmt.Printf("%+v\n", testRecipe)
 	id, err := CreateByType(testRecipe)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if id == "" {
-		t.Fatalf("failed to create a id: %v", id)
-	}
+	require.NotEmpty(t, id, "failed to create an ID")
+	require.NoError(t, err, "failed to insert recipe for delete test")
 
 	testRecipe.ID = id
 	_, err = DeleteByType(testRecipe)
@@ -35,28 +30,15 @@ func TestDeleteGeneric(t *testing.T) {
 func TestGetGeneric(t *testing.T) {
 	id, err := CreateByType(testRecipe)
 
-	if id == "" {
-		t.Fatalf("failed to create a id: %v", id)
-	}
-
-	if err != nil {
-		t.Fatalf("failed to insert recipe: %v", err)
-	}
+	require.NotEmpty(t, id, "failed to create an ID")
+	require.NoError(t, err, "failed to insert recipe for get test")
 
 	testRecipe.ID = id
 	obj, err := GetByType(testRecipe)
 
-	if err != nil {
-		t.Fatalf("failed to get recipe: %v", err)
-	}
-
-	if obj.GetID() != testRecipe.GetID() {
-		t.Errorf("expected ID %s, got %s", testRecipe.GetID(), obj.GetID())
-	}
-
-	if obj.Name != testRecipe.Name {
-		t.Errorf("expected Name %s, got %s", testRecipe.Name, obj.Name)
-	}
+	require.NoError(t, err, "failed to get recipe")
+	assert.Equal(t, testRecipe.GetID(), obj.GetID(), "unexpected recipe ID")
+	assert.Equal(t, testRecipe.Name, obj.Name, "unexpected recipe Name")
 
 	_, err = DeleteByType(obj)
 	if err != nil {
@@ -66,39 +48,25 @@ func TestGetGeneric(t *testing.T) {
 
 func TestCreateGeneric(t *testing.T) {
 	id, err := CreateByType(testRecipe)
-
-	if id == "" {
-		t.Fatalf("failed to create a id: %v", id)
-	}
+	require.NoError(t, err, "failed to insert recipe")
+	require.NotEmpty(t, id, "failed to create an ID")
 
 	testRecipe.ID = id
 
-	if err != nil {
-		t.Fatalf("failed to insert recipe: %v", err)
-	}
 	err = testutils.AssertCountByType[types.Recipe](1, GetCountByType)
-
-	if err != nil {
-		t.Fatalf("failed to get the count %v", err)
-	}
+	require.NoError(t, err, "failed to get the count")
 
 	_, err = DeleteByType(testRecipe)
-
-	if err != nil {
-		t.Fatalf("failed to clean up recipe: %v", err)
-	}
+	require.NoError(t, err, "failed to clean up recipe")
 }
 
 func TestUpdateGeneric(t *testing.T) {
 	id, err := CreateByType(testRecipe)
 
-	if id == "" {
-		t.Fatalf("failed to create a id: %v", id)
-	}
+	require.NotEmpty(t, id, "failed to create an ID")
+	require.NoError(t, err, "failed to insert recipe for update test")
 
-	if err != nil {
-		t.Fatalf("failed to insert recipe for update test: %v", err)
-	}
+	require.NoError(t, err, "failed to insert recipe for update test")
 
 	testRecipe.Name = "Updated Recipe"
 	testRecipe.Description = "Updated Description"
@@ -107,76 +75,48 @@ func TestUpdateGeneric(t *testing.T) {
 	testRecipe.ID = id
 
 	_, err = UpdateByType(testRecipe)
-	if err != nil {
-		t.Fatalf("failed to update recipe: %v", err)
-	}
+	require.NoError(t, err, "failed to update recipe")
 
 	updated, err := GetByType(testRecipe)
-	if err != nil {
-		t.Fatalf("failed to fetch updated recipe: %v", updated)
-	}
+	require.NoError(t, err, "failed to fetch updated recipe")
 
-	if updated.Name != "Updated Recipe" || updated.Description != "Updated Description" ||
-		updated.Image != "after.jpg" || updated.Likes != 42 {
-		t.Errorf("update not applied correctly: %+v", updated)
-	}
+	assert.Equal(t, "Updated Recipe", updated.Name, "name was not updated correctly")
+	assert.Equal(t, "Updated Description", updated.Description, "description was not updated correctly")
+	assert.Equal(t, "after.jpg", updated.Image, "image was not updated correctly")
+	assert.Equal(t, 42, updated.Likes, "likes was not updated correctly")
 
 	_, err = DeleteByType(testRecipe)
-	if err != nil {
-		t.Fatalf("failed to clean up recipe: %v", err)
-	}
+	require.NoError(t, err, "failed to clean up recipe")
 }
+
 func TestGetMany(t *testing.T) {
 	for i := range testRecipes {
 		id, err := CreateByType(testRecipes[i])
 		testRecipes[i].ID = id
-
-		if err != nil {
-			t.Fatalf("failed to insert recipe at index %d: %v\nRecipe ID: %s", i, err, id)
-		}
-
-		if id == "" {
-			t.Fatalf("failed to create a id: %v", id)
-		}
-
+		require.NoErrorf(t, err, "failed to insert recipe at index %d", i)
+		require.NotEmptyf(t, id, "failed to create an ID at index %d", i)
 	}
 
-	err := testutils.AssertCountByType[types.Recipe](len(testRecipes), GetCountByType)
-
-	if err != nil {
-		t.Fatalf("failed to get the count %v", err)
-	}
+	require.NoError(t, testutils.AssertCountByType[types.Recipe](len(testRecipes), GetCountByType), "failed to get the count")
 
 	for i, recipe := range testRecipes {
 		_, err := DeleteByType(recipe)
-		if err != nil {
-			t.Fatalf("failed to delete recipe at index %d: %v\nRecipe ID: %s", i, err, recipe.GetID())
-		}
+		require.NoErrorf(t, err, "failed to delete recipe at index %d (ID: %s)", i, recipe.GetID())
 	}
 
-	err = testutils.AssertCountByType[types.Recipe](0, GetCountByType)
+	require.NoError(t, testutils.AssertCountByType[types.Recipe](0, GetCountByType), "failed to get the count after deletions")
 
-	if err != nil {
-		t.Fatalf("failed to get the count %v", err)
-	}
 }
 
 func TestOneToMany(t *testing.T) {
 	ids, err := CreateManyByType(testIngredients)
-
-	if err != nil {
-		t.Fatalf("error creating ingredients")
-	}
-
+	require.NoError(t, err, "error creating ingredients")
 	for i := range ids {
 		testIngredients[i].ID = ids[i]
 	}
 
 	ids, err = CreateManyByType(testRecipes)
-	if err != nil {
-		t.Fatalf("error creating recipes")
-	}
-
+	require.NoError(t, err, "error creating recipes")
 	for i := range ids {
 		testRecipes[i].ID = ids[i]
 	}
@@ -188,43 +128,21 @@ func TestOneToMany(t *testing.T) {
 			types.IngredientToRecipeIngredient,
 		)
 		err = CreateOneToManyByType(testRecipes[i], testRecipes[i].ID, recipeIngredients)
-
-		if err != nil {
-			t.Fatalf("failed to insert relations at index %d: %v\n Recipe ID: %s", i, err, testRecipes[i].ID)
-		}
+		require.NoErrorf(t, err, "failed to insert relations at index %d (Recipe ID: %s)", i, testRecipes[i].ID)
 	}
+
 	tableName := types.RecipeIngredient{}.TableName()
-
 	expectedLength := len(testIngredients) * len(testRecipes)
-	err = testutils.AssertCountByTable(expectedLength, tableName, GetCountByTable)
 
-	if err != nil {
-		t.Fatalf("failed to get the count %v", err)
-	}
-
-	err = DeleteManyByType(testRecipes)
-
-	if err != nil {
-		t.Fatalf("error deleting recipes")
-	}
-
-	err = testutils.AssertCountByTable(0, tableName, GetCountByTable)
-
-	if err != nil {
-		t.Fatalf("failed to get the count %v", err)
-	}
-
-	err = DeleteManyByType(testIngredients)
-	if err != nil {
-		t.Fatalf("error deleting ingredients")
-	}
+	require.NoError(t, testutils.AssertCountByTable(expectedLength, tableName, GetCountByTable), "failed to get the count")
+	require.NoError(t, DeleteManyByType(testRecipes), "error deleting recipes")
+	require.NoError(t, testutils.AssertCountByTable(0, tableName, GetCountByTable), "failed to get the count after deleting recipes")
+	require.NoError(t, DeleteManyByType(testIngredients), "error deleting ingredients")
 }
 
 func TestCreateByTypeWithRelations(t *testing.T) {
 	ids, err := CreateManyByType(testIngredients)
-	if err != nil {
-		t.Fatalf("error creating ingredients")
-	}
+	require.NoError(t, err, "error creating ingredients")
 
 	for i := range ids {
 		testIngredients[i].ID = ids[i]
@@ -240,38 +158,17 @@ func TestCreateByTypeWithRelations(t *testing.T) {
 	id, err := CreateByTypeWithRelations(testRecipe)
 	tableName := types.RecipeIngredient{}.TableName()
 
-	if err != nil {
-		t.Fatalf("error creating recipe with relations %v", err)
-	}
-
-	if id == "" {
-		t.Fatalf("error generating a ID")
-	}
+	require.NoError(t, err, "error creating recipe with relations")
+	require.NotEmpty(t, id, "error generating a ID")
 
 	testRecipe.ID = id
 
 	expectedLength := len(testIngredients)
-	err = testutils.AssertCountByTable(expectedLength, tableName, GetCountByTable)
-
-	if err != nil {
-		t.Fatalf("failed to get the count %v", err)
-	}
+	require.NoError(t, testutils.AssertCountByTable(expectedLength, tableName, GetCountByTable), "failed to get the count")
 
 	_, err = DeleteByType(testRecipe)
+	require.NoError(t, err, "error deleting recipes")
 
-	if err != nil {
-		t.Fatalf("error deleting recipes %v", err)
-	}
-
-	err = testutils.AssertCountByType[types.Recipe](0, GetCountByType)
-
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-
-	err = testutils.AssertCountByTable(0, tableName, GetCountByTable)
-
-	if err != nil {
-		t.Fatalf("failed to get the count %v", err)
-	}
+	require.NoError(t, testutils.AssertCountByType[types.Recipe](0, GetCountByType))
+	require.NoError(t, testutils.AssertCountByTable(0, tableName, GetCountByTable), "failed to get the count after deletions")
 }
