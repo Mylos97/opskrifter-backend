@@ -110,6 +110,13 @@ func GetCountByTable(table string) (int, error) {
 func GetManyByType[T types.Identifiable](opts QueryOptions) ([]T, error) {
 	var zero T
 	var objs []T
+	if opts.PerPage < 0 {
+		return nil, fmt.Errorf("per page cannot be less than 0")
+	}
+
+	if opts.Page < 0 {
+		return nil, fmt.Errorf("page cannot be less than 0")
+	}
 
 	query, args := BuildQuery(zero.TableName(), opts)
 

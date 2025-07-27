@@ -10,16 +10,18 @@ import (
 	"github.com/google/uuid"
 )
 
-type (
-	CrudFunc[T types.Identifiable] func(T) (string, error)
-	GetFunc[T types.Identifiable]  func(T) (T, error)
-)
-
 type QueryOptions struct {
-	Filters map[string]any
-	Page    int
-	PerPage int
-	OrderBy string
+	Page    int    `json:"page"`
+	PerPage int    `json:"per_page"`
+	OrderBy string `json:"order_by"`
+}
+
+var validOrderBys = map[string]bool{
+	"id":         true,
+	"name":       true,
+	"created_at": true,
+	"likes":      true,
+	"minutes":    true,
 }
 
 var ErrMissingParentOrChild = errors.New("missing parent or child tag in struct")
@@ -98,35 +100,15 @@ func buildUpdateQuery(obj any) (string, []any) {
 }
 
 func BuildQuery(tableName string, opts QueryOptions) (string, []any) {
-	if opts.Page < 1 {
-		opts.Page = 1
-	}
-	if opts.PerPage < 1 {
-		opts.PerPage = 10
-	}
-	if opts.OrderBy == "" {
-		opts.OrderBy = "id"
-	}
-
 	offset := (opts.Page - 1) * opts.PerPage
 	var args []any
 	query := fmt.Sprintf("SELECT * FROM %s", tableName)
 
-	if len(opts.Filters) > 0 {
-		var where []string
-		i := 1
-		for k, v := range opts.Filters {
-			where = append(where, fmt.Sprintf("%s = $%d", k, i))
-			args = append(args, v)
-			i++
-		}
-		query += " WHERE " + strings.Join(where, " AND ")
+	if opts.OrderBy != "" && validOrderBys[opts.OrderBy] {
+		query += fmt.Sprintf(" ORDER BY %s", opts.OrderBy)
 	}
 
-	query += fmt.Sprintf(" ORDER BY %s LIMIT $%d OFFSET $%d",
-		opts.OrderBy,
-		len(args)+1,
-		len(args)+2)
+	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", len(args)+1, len(args)+2)
 	args = append(args, opts.PerPage, offset)
 
 	return query, args

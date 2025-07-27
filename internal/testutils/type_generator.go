@@ -63,13 +63,13 @@ func (g *TestDataGenerator[T]) GenerateMany(count int) []T {
 }
 
 var (
-	idCharset = "abcdefghijklmnopqrstuvwxyz0123456789"
+	charset = "abcdefghijklmnopqrstuvwxyz"
 )
 
 func generateRandomString(length int) string {
 	b := make([]byte, length)
 	for i := range b {
-		b[i] = idCharset[rand.Intn(len(idCharset))]
+		b[i] = charset[rand.Intn(len(charset))]
 	}
 	return string(b)
 }

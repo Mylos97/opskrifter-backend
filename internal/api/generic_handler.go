@@ -12,6 +12,12 @@ type Response struct {
 	Message string `json:"message"`
 }
 
+type (
+	CrudFunc[T types.Identifiable]                    func(T) (string, error)
+	GetFunc[T types.Identifiable]                     func(T) (T, error)
+	GetManyFunc[T types.Identifiable, Q QueryOptions] func(Q) ([]T, error)
+)
+
 func HandlerByType[T types.Identifiable](crudFunc CrudFunc[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var obj T
@@ -55,6 +61,26 @@ func GetHandlerByType[T types.Identifiable](getFunc GetFunc[T]) http.HandlerFunc
 		}
 
 		result, err := getFunc(obj)
+		if err != nil {
+			http.Error(w, "operation failed: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(result)
+	}
+}
+
+func GetHandlerManyByType[T types.Identifiable, Q QueryOptions](getManyFunc GetManyFunc[T, Q]) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var ops Q
+		if err := json.NewDecoder(r.Body).Decode(&ops); err != nil {
+			http.Error(w, "invalid JSON: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		result, err := getManyFunc(ops)
 		if err != nil {
 			http.Error(w, "operation failed: "+err.Error(), http.StatusInternalServerError)
 			return

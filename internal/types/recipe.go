@@ -10,6 +10,7 @@ type Recipe struct {
 	Image             string `json:"image" db:"image"`
 	RecipeCuisine     string `json:"recipe_cuisine" db:"recipe_cuisine"`
 	UserID            string `json:"user_id" db:"user_id"`
+	CreatedAt         string `json:"created_at" db:"created_at"`
 	RecipeIngredients []RecipeIngredient
 }
 

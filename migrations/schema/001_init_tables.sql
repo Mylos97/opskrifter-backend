@@ -9,6 +9,7 @@ CREATE TABLE
     comments INTEGER DEFAULT 0,
     image TEXT NOT NULL,
     recipe_cuisine TEXT NOT NULL,
+    created_at TEXT NOT NULL,
     user_id TEXT NOT NULL);
 
 CREATE TABLE IF NOT EXISTS ingredients (
