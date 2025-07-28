@@ -97,7 +97,7 @@ func TestUpdateHandlerByType(t *testing.T) {
 
 	require.NoError(t, testutils.AssertCountByType[types.Recipe](1, GetCountByType), "failed to get the count")
 
-	updated, err := GetByType(updatedRecipe)
+	updated, err := GetByType[types.Recipe](updatedRecipe.ID)
 	require.NoError(t, err, "error fetching updated recipe")
 
 	testutils.EqualByValue(updatedRecipe, updated)

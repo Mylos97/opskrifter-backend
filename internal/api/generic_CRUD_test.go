@@ -34,7 +34,7 @@ func TestGetGeneric(t *testing.T) {
 	require.NoError(t, err, "failed to insert recipe for get test")
 
 	testRecipe.ID = id
-	obj, err := GetByType(testRecipe)
+	obj, err := GetByType[types.Recipe](id)
 
 	require.NoError(t, err, "failed to get recipe")
 	assert.Equal(t, testRecipe.GetID(), obj.GetID(), "unexpected recipe ID")
@@ -74,7 +74,7 @@ func TestUpdateGeneric(t *testing.T) {
 	_, err = UpdateByType(testRecipe)
 	require.NoError(t, err, "failed to update recipe")
 
-	updated, err := GetByType(testRecipe)
+	updated, err := GetByType[types.Recipe](id)
 	require.NoError(t, err, "failed to fetch updated recipe")
 
 	assert.Equal(t, "Updated Recipe", updated.Name, "name was not updated correctly")

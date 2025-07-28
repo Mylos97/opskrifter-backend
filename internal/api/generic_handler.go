@@ -19,7 +19,7 @@ type Response struct {
 type (
 	DeleteFunc[T types.Identifiable]                  func(id string) (string, error)
 	CrudFunc[T types.Identifiable]                    func(T) (string, error)
-	GetFunc[T types.Identifiable]                     func(T) (T, error)
+	GetFunc[T types.Identifiable]                     func(id string) (T, error)
 	GetManyFunc[T types.Identifiable, Q QueryOptions] func(Q) ([]T, error)
 )
 
@@ -85,19 +85,13 @@ func DeleteHandlerByType[T types.Identifiable](deleteFunc DeleteFunc[T]) http.Ha
 
 func GetHandlerByType[T types.Identifiable](getFunc GetFunc[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var obj T
-
-		if err := json.NewDecoder(r.Body).Decode(&obj); err != nil {
-			http.Error(w, "invalid JSON: "+err.Error(), http.StatusBadRequest)
+		id := chi.URLParam(r, "id")
+		if id == "" {
+			http.Error(w, "missing id", http.StatusBadRequest)
 			return
 		}
 
-		if obj.GetID() == "" {
-			http.Error(w, "missing ID field", http.StatusBadRequest)
-			return
-		}
-
-		result, err := getFunc(obj)
+		result, err := getFunc(id)
 
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "not found", http.StatusNotFound)

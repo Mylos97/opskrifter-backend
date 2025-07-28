@@ -21,9 +21,10 @@ func DeleteByType[T types.Identifiable](id string) (string, error) {
 	return id, nil
 }
 
-func GetByType[T types.Identifiable](obj T) (T, error) {
+func GetByType[T types.Identifiable](id string) (T, error) {
+	var obj T
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = ?", obj.TableName())
-	err := myDB.DB.Get(&obj, query, obj.GetID())
+	err := myDB.DB.Get(&obj, query, id)
 	return obj, err
 }
 
