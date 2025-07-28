@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"opskrifter-backend/internal/types"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,7 +31,7 @@ func TestRouteCreateRecipe(t *testing.T) {
 	count, err := GetCountByType(testRecipe)
 	require.NoError(t, err, "unexpected error from GetCountByType")
 	assert.Equal(t, 1, count, "expected count to be 1")
-	_, err = DeleteByType(testRecipe)
+	_, err = DeleteByType[types.Recipe](response.ID)
 	require.NoError(t, err, "error deleting recipe")
 }
 
@@ -57,7 +58,7 @@ func TestRouteUpdateRecipe(t *testing.T) {
 	testRouter.ServeHTTP(resp, req)
 
 	assert.Equal(t, http.StatusOK, resp.Code)
-	_, err = DeleteByType(testRecipe)
+	_, err = DeleteByType[types.Recipe](createResp.ID)
 	require.NoError(t, err, "error deleting recipe")
 }
 
@@ -77,7 +78,7 @@ func TestRouteDeleteRecipe(t *testing.T) {
 	testRecipe.ID = createResp.ID
 	updatedBody, _ := json.Marshal(testRecipe)
 
-	req = httptest.NewRequest("DELETE", fmt.Sprintf("/recipes/%s", testRecipe.ID), bytes.NewBuffer(updatedBody))
+	req = httptest.NewRequest("DELETE", fmt.Sprintf("/recipes/%s", testRecipe.ID), nil)
 	resp = httptest.NewRecorder()
 	testRouter.ServeHTTP(resp, req)
 

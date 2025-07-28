@@ -1,14 +1,17 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"opskrifter-backend/internal/testutils"
 	"opskrifter-backend/internal/types"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,8 +36,8 @@ func TestCreateHandlerByType(t *testing.T) {
 	require.NotEmpty(t, response.ID, "expected non-empty id field in response")
 	require.NoError(t, testutils.AssertCountByType[types.Recipe](1, GetCountByType))
 
-	recipe := types.Recipe{ID: response.ID}
-	_, err = DeleteByType(recipe)
+	id := response.ID
+	_, err = DeleteByType[types.Recipe](id)
 	require.NoError(t, err, "failed to delete recipe")
 	require.NoError(t, testutils.AssertCountByType[types.Recipe](0, GetCountByType))
 }
@@ -43,12 +46,12 @@ func TestDeleteHandlerByType(t *testing.T) {
 	id, err := CreateByType(handlerRecipe)
 	require.NoError(t, err, "failed to create recipe")
 	require.NotEmpty(t, id, "failed to generate id")
-	handlerRecipe.ID = id
+	req := httptest.NewRequest(http.MethodDelete, "/recipes/"+id, nil)
+	rec := httptest.NewRecorder()
+	chiCtx := chi.NewRouteContext()
+	chiCtx.URLParams.Add("id", id)
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, chiCtx))
 
-	data, err := json.Marshal(handlerRecipe)
-	require.NoError(t, err, "failed to marshal handlerRecipe")
-
-	req, rec := testutils.NewJSONPostRequest(data)
 	DeleteRecipe.ServeHTTP(rec, req)
 
 	resp := rec.Result()
@@ -63,7 +66,6 @@ func TestDeleteHandlerByType(t *testing.T) {
 	require.NoError(t, json.Unmarshal(body, &response), "failed to unmarshal response JSON")
 	require.NotEmpty(t, response.ID, "expected non-empty id field in response")
 	require.NoError(t, testutils.AssertCountByType[types.Recipe](0, GetCountByType))
-
 }
 
 func TestUpdateHandlerByType(t *testing.T) {
@@ -100,7 +102,7 @@ func TestUpdateHandlerByType(t *testing.T) {
 
 	testutils.EqualByValue(updatedRecipe, updated)
 
-	_, err = DeleteByType(updatedRecipe)
+	_, err = DeleteByType[types.Recipe](id)
 	require.NoError(t, err, "error deleting recipe")
 
 }
@@ -202,6 +204,6 @@ func TestGetManyHandlerByType(t *testing.T) {
 		})
 	}
 
-	err = DeleteManyByType(testRecipes)
+	err = DeleteManyByType[types.Recipe](ids)
 	require.NoError(t, err, "error deleting recipes")
 }

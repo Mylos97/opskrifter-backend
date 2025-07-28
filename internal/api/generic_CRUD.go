@@ -6,9 +6,10 @@ import (
 	"opskrifter-backend/pkg/myDB"
 )
 
-func DeleteByType[T types.Identifiable](obj T) (string, error) {
+func DeleteByType[T types.Identifiable](id string) (string, error) {
+	var obj T
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = ?", obj.TableName())
-	sqlResult, err := myDB.DB.Exec(query, obj.GetID())
+	sqlResult, err := myDB.DB.Exec(query, id)
 	if err != nil {
 		return "", fmt.Errorf("failed to delete: %w", err)
 	}
@@ -17,8 +18,7 @@ func DeleteByType[T types.Identifiable](obj T) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	return obj.GetID(), nil
+	return id, nil
 }
 
 func GetByType[T types.Identifiable](obj T) (T, error) {
@@ -132,9 +132,9 @@ func CreateManyByType[T types.Identifiable](elements []T) ([]string, error) {
 	return ids, nil
 }
 
-func DeleteManyByType[T types.Identifiable](elements []T) error {
-	for i := range elements {
-		_, err := DeleteByType(elements[i])
+func DeleteManyByType[T types.Identifiable](ids []string) error {
+	for i := range ids {
+		_, err := DeleteByType[T](ids[i])
 		if err != nil {
 			return err
 		}

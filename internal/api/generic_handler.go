@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"opskrifter-backend/internal/types"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type Response struct {
@@ -15,6 +17,7 @@ type Response struct {
 }
 
 type (
+	DeleteFunc[T types.Identifiable]                  func(id string) (string, error)
 	CrudFunc[T types.Identifiable]                    func(T) (string, error)
 	GetFunc[T types.Identifiable]                     func(T) (T, error)
 	GetManyFunc[T types.Identifiable, Q QueryOptions] func(Q) ([]T, error)
@@ -38,6 +41,38 @@ func HandlerByType[T types.Identifiable](crudFunc CrudFunc[T]) http.HandlerFunc 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
+		resp := Response{
+			ID:      id,
+			Message: "operation succeeded",
+		}
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			log.Printf("failed to encode response: %v", err)
+		}
+	}
+}
+
+func DeleteHandlerByType[T types.Identifiable](deleteFunc DeleteFunc[T]) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+		if id == "" {
+			http.Error(w, "missing id", http.StatusBadRequest)
+			return
+		}
+
+		_, err := deleteFunc(id)
+
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+
+		if err != nil {
+			http.Error(w, "operation failed: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		resp := Response{
 			ID:      id,
 			Message: "operation succeeded",
