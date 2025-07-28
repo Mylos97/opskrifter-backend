@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"opskrifter-backend/internal/types"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -17,10 +18,10 @@ type Response struct {
 }
 
 type (
-	DeleteFunc[T types.Identifiable]                  func(id string) (string, error)
-	CrudFunc[T types.Identifiable]                    func(T) (string, error)
-	GetFunc[T types.Identifiable]                     func(id string) (T, error)
-	GetManyFunc[T types.Identifiable, Q QueryOptions] func(Q) ([]T, error)
+	DeleteFunc[T types.Identifiable]  func(id string) (string, error)
+	CrudFunc[T types.Identifiable]    func(T) (string, error)
+	GetFunc[T types.Identifiable]     func(id string) (T, error)
+	GetManyFunc[T types.Identifiable] func(q QueryOptions) ([]T, error)
 )
 
 func HandlerByType[T types.Identifiable](crudFunc CrudFunc[T]) http.HandlerFunc {
@@ -109,15 +110,32 @@ func GetHandlerByType[T types.Identifiable](getFunc GetFunc[T]) http.HandlerFunc
 	}
 }
 
-func GetHandlerManyByType[T types.Identifiable, Q QueryOptions](getManyFunc GetManyFunc[T, Q]) http.HandlerFunc {
+func GetHandlerManyByType[T types.Identifiable](getManyFunc GetManyFunc[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var ops Q
-		if err := json.NewDecoder(r.Body).Decode(&ops); err != nil {
-			http.Error(w, "invalid JSON: "+err.Error(), http.StatusBadRequest)
+		query := r.URL.Query()
+		page, err := strconv.ParseInt(query.Get("page"), 32, 32)
+		if err != nil {
+			http.Error(w, "err parsing page: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
+		perPage, err := strconv.ParseInt(query.Get("per_page"), 32, 32)
+		if err != nil {
+			http.Error(w, "err parsing page: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		ops := QueryOptions{
+			Page:    int(page),
+			PerPage: int(perPage),
+			OrderBy: query.Get("order_by"),
+		}
+
 		result, err := getManyFunc(ops)
+
+		if err == ErrNotValidOrderBy {
+			http.Error(w, "operation failed "+err.Error(), http.StatusBadRequest)
+		}
 		if err != nil {
 			http.Error(w, "operation failed: "+err.Error(), http.StatusInternalServerError)
 			return

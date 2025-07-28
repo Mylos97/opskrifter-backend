@@ -90,3 +90,54 @@ func TestRouteDeleteRecipe(t *testing.T) {
 
 	assert.Equal(t, http.StatusNotFound, resp.Code)
 }
+
+func TestRouteGetRecipe(t *testing.T) {
+	body, _ := json.Marshal(testRecipe)
+	req := httptest.NewRequest("POST", "/recipes/", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp := httptest.NewRecorder()
+	testRouter.ServeHTTP(resp, req)
+
+	require.Equal(t, http.StatusOK, resp.Code)
+
+	var createResp Response
+	err := json.Unmarshal(resp.Body.Bytes(), &createResp)
+	require.NoError(t, err)
+
+	testRecipe.ID = createResp.ID
+	updatedBody, _ := json.Marshal(testRecipe)
+
+	req = httptest.NewRequest("GET", fmt.Sprintf("/recipes/%s", testRecipe.ID), bytes.NewBuffer(updatedBody))
+	resp = httptest.NewRecorder()
+	testRouter.ServeHTTP(resp, req)
+	assert.Equal(t, http.StatusOK, resp.Code)
+
+	req = httptest.NewRequest("DELETE", fmt.Sprintf("/recipes/%s", testRecipe.ID), nil)
+	resp = httptest.NewRecorder()
+	testRouter.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusOK, resp.Code)
+}
+
+func TestRouteGetManyRecipe(t *testing.T) {
+	ids, err := CreateManyByType(testRecipes)
+	require.NoError(t, err, "error creating recipes")
+
+	defer func() {
+		err := DeleteManyByType[types.Recipe](ids)
+		require.NoError(t, err, "error deleting recipes")
+	}()
+
+	req := httptest.NewRequest("GET", "/recipes/?page=0&per_page=2&order_by=name", nil)
+	resp := httptest.NewRecorder()
+
+	testRouter.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusOK, resp.Code, "expected status 200 OK")
+
+	var got []types.Recipe
+	err = json.NewDecoder(resp.Body).Decode(&got)
+	require.NoError(t, err, "error decoding response body")
+
+	require.Len(t, got, 2, "expected 2 recipes in result")
+}

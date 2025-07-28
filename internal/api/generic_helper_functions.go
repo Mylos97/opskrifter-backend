@@ -27,6 +27,7 @@ var validOrderBys = map[string]bool{
 var ErrMissingParentOrChild = errors.New("missing parent or child tag in struct")
 var ErrRowsAffectedZero = errors.New("expected affected rows to be 1 got 0")
 var ErrExecutingQuery = errors.New("error executing query")
+var ErrNotValidOrderBy = errors.New("this order by does not exist")
 
 func buildInsertQuery(obj any) (string, []any, string) {
 	v := reflect.ValueOf(obj)
@@ -99,10 +100,14 @@ func buildUpdateQuery(obj any) (string, []any) {
 	return query, values
 }
 
-func BuildQuery(tableName string, opts QueryOptions) (string, []any) {
+func BuildQuery(tableName string, opts QueryOptions) (string, []any, error) {
 	offset := (opts.Page - 1) * opts.PerPage
 	var args []any
 	query := fmt.Sprintf("SELECT * FROM %s", tableName)
+
+	if opts.OrderBy != "" && !validOrderBys[opts.OrderBy] {
+		return "", nil, ErrNotValidOrderBy
+	}
 
 	if opts.OrderBy != "" && validOrderBys[opts.OrderBy] {
 		query += fmt.Sprintf(" ORDER BY %s", opts.OrderBy)
@@ -111,7 +116,7 @@ func BuildQuery(tableName string, opts QueryOptions) (string, []any) {
 	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", len(args)+1, len(args)+2)
 	args = append(args, opts.PerPage, offset)
 
-	return query, args
+	return query, args, nil
 }
 
 func buildQueryOneToManyByType[E types.OneToMany](parentID string, elements []E) (string, error) {

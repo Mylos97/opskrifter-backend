@@ -111,9 +111,13 @@ func GetManyByType[T types.Identifiable](opts QueryOptions) ([]T, error) {
 		return nil, fmt.Errorf("page cannot be less than 0")
 	}
 
-	query, args := BuildQuery(zero.TableName(), opts)
+	query, args, err := BuildQuery(zero.TableName(), opts)
 
-	err := myDB.DB.Select(&objs, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = myDB.DB.Select(&objs, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}

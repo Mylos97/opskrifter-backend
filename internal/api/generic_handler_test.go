@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -12,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -109,101 +107,51 @@ func TestUpdateHandlerByType(t *testing.T) {
 
 func TestGetManyHandlerByType(t *testing.T) {
 	ids, err := CreateManyByType(testRecipes)
-	for i := range ids {
-		testRecipes[i].ID = ids[i]
-	}
+	require.NoError(t, err, "error creating recipes")
 
-	if err != nil {
-		t.Fatalf("error creating recipes")
-	}
+	defer func() {
+		err = DeleteManyByType[types.Recipe](ids)
+		require.NoError(t, err, "error deleting recipes")
+	}()
 
-	testCases := []struct {
-		name        string
-		query       QueryOptions
-		expectedLen int
-		expectError bool
-		validate    func([]types.Recipe) error
-	}{
-		{
-			name: "basic pagination",
-			query: QueryOptions{
-				Page:    1,
-				PerPage: 3,
-			},
-			expectedLen: 3,
-		},
-		{
-			name: "second page",
-			query: QueryOptions{
-				Page:    2,
-				PerPage: 5,
-			},
-			expectedLen: 5,
-			validate: func(recipes []types.Recipe) error {
-				if recipes[0].ID != testRecipes[5].ID {
-					return fmt.Errorf("unexpected first item on page 1 got id %s expected %s", recipes[0].ID, testRecipes[4].ID)
-				}
-				return nil
-			},
-		},
-		{
-			name: "invalid per_page",
-			query: QueryOptions{
-				PerPage: -1,
-			},
-			expectError: true,
-		},
-		{
-			name: "ordering by name",
-			query: QueryOptions{
-				PerPage: 5,
-				OrderBy: "name",
-			},
-			expectedLen: 5,
-			validate: func(recipes []types.Recipe) error {
-				for i := 0; i < len(recipes)-1; i++ {
-					if recipes[i].Name > recipes[i+1].Name {
-						return fmt.Errorf("items not ordered by name")
-					}
-				}
-				return nil
-			},
-		},
-	}
+	req := httptest.NewRequest("GET", "/?page=0&per_page=5&order_by=name", nil)
+	rec := httptest.NewRecorder()
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			data, err := json.Marshal(tc.query)
-			require.NoError(t, err, "failed to marshal query")
+	GetManyRecipe.ServeHTTP(rec, req)
 
-			req, rec := testutils.NewJSONPostRequest(data)
-			GetManyRecipe.ServeHTTP(rec, req)
+	res := rec.Result()
+	defer res.Body.Close()
 
-			resp := rec.Result()
-			defer resp.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode, "expected status OK")
 
-			if tc.expectError {
-				assert.NotEqual(t, http.StatusOK, resp.StatusCode, "expected error status code, got 200")
-				return
-			}
+	var got []types.Recipe
+	err = json.NewDecoder(res.Body).Decode(&got)
+	require.NoError(t, err, "error decoding response")
 
-			require.Equal(t, http.StatusOK, resp.StatusCode, "expected status 200")
+	require.Len(t, got, 5, "expected 5 recipes in result")
 
-			body, err := io.ReadAll(resp.Body)
-			require.NoError(t, err, "failed to read response body")
+	req = httptest.NewRequest("GET", "/?page=0&per_page=5&order_by=loool", nil)
+	rec = httptest.NewRecorder()
 
-			var objs []types.Recipe
-			require.NoError(t, json.Unmarshal(body, &objs), "failed to unmarshal response JSON")
+	GetManyRecipe.ServeHTTP(rec, req)
 
-			require.Equal(t, tc.expectedLen, len(objs), "unexpected number of items")
+	res = rec.Result()
+	defer res.Body.Close()
 
-			if tc.validate != nil {
-				err = tc.validate(objs)
-				assert.NoError(t, err, "validation failed")
-			}
-		})
-	}
+	require.Equal(t, http.StatusBadRequest, res.StatusCode, "expected status OK")
 
-	err = DeleteManyByType[types.Recipe](ids)
-	require.NoError(t, err, "error deleting recipes")
+	req = httptest.NewRequest("GET", "/?page=2&per_page=5", nil)
+	rec = httptest.NewRecorder()
+
+	GetManyRecipe.ServeHTTP(rec, req)
+
+	res = rec.Result()
+	defer res.Body.Close()
+
+	require.Equal(t, http.StatusOK, res.StatusCode, "expected status OK")
+	err = json.NewDecoder(res.Body).Decode(&got)
+	require.NoError(t, err, "error decoding response")
+
+	require.Len(t, got, 5, "expected 5 recipes in result")
+	require.Equal(t, ids[5], got[0].ID)
 }
