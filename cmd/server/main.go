@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"opskrifter-backend/internal/api"
-	"opskrifter-backend/internal/middleware"
 	"opskrifter-backend/pkg/myDB"
 	"os"
 
@@ -14,19 +13,11 @@ import (
 func main() {
 	port := os.Getenv("PORT")
 
-	isProd := port != "8080"
-	err := myDB.Init(isProd)
+	err := myDB.Init(false)
 	if err != nil {
 		log.Fatalf("error init DB %v", err)
 	}
 	r := chi.NewRouter()
-
-	if isProd {
-		r.Use(middleware.APIKeyAuth)
-		log.Println("Starting in PRODUCTION mode...")
-	} else {
-		log.Println("Starting in LOCAL mode...")
-	}
 
 	api.RegisterRoutes(r)
 

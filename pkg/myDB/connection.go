@@ -15,10 +15,16 @@ var DB *sqlx.DB
 
 func Init(inMemory bool) error {
 	var err error
-	dsn := "file:app.db?_fk=on&_journal_mode=WAL"
+	dsn := "file:app.db?mode=rwc&_fk=on&_journal_mode=WAL"
 	if inMemory {
-		dsn = "file:sharedmemdb?mode=memory&cache=shared&_fk=on&_journal_mode=WAL"
+		dsn = "file:sharedmemdb?mode=memory&cache=shared&_fk=on"
 	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Current working directory:", cwd)
 
 	DB, err = sqlx.Open("sqlite3", dsn)
 	if err != nil {
@@ -48,14 +54,10 @@ func Init(inMemory bool) error {
 		log.Fatalf("failed to run schema migrations: %v", err)
 	}
 
-	var fkEnabled int
-	err = DB.QueryRow("PRAGMA foreign_keys;").Scan(&fkEnabled)
-	if err != nil {
-		log.Fatal(err)
-	}
+	err = checkDBSettings(inMemory, cwd)
 
-	if fkEnabled != 1 {
-		return fmt.Errorf("expected _fk to be 1 got %d", fkEnabled)
+	if err != nil {
+		return err
 	}
 
 	return nil
