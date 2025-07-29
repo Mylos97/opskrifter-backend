@@ -9,10 +9,12 @@ import (
 	"github.com/go-chi/httprate"
 )
 
-func RegisterRoutes(r *chi.Mux) {
+func RegisterRoutes(r *chi.Mux, env string) {
 
-	r.Use(httprate.LimitByIP(20, 1*time.Minute))
-	r.Use(middleware.APIKeyAuth)
+	if env == "prod" {
+		r.Use(httprate.LimitByIP(20, 1*time.Minute))
+		r.Use(middleware.APIKeyAuth)
+	}
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
@@ -32,5 +34,9 @@ func setupRouter(r *chi.Mux) {
 		r.Post("/{id}/like", LikeRecipe)
 		r.Delete("/{id}/like", UnlikeRecipe)
 		r.Post("/{id}/views", UpdateViewRecipe)
+	})
+
+	r.Route("/ingredients", func(r chi.Router) {
+		r.Get("/", GetManyIngredients)
 	})
 }

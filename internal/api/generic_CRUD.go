@@ -189,6 +189,21 @@ func GetManyByType[T types.Identifiable](opts QueryOptions) ([]T, error) {
 	return objs, nil
 }
 
+func GetAllByType[T types.Identifiable]() ([]T, error) {
+	var obj T
+	var objs []T
+
+	tableName := obj.TableName()
+	query := fmt.Sprintf("SELECT * FROM %s", tableName)
+	err := myDB.DB.Select(&objs, query)
+
+	if err != nil {
+		return objs, err
+	}
+
+	return objs, nil
+}
+
 func CreateManyByType[T types.Identifiable](elements []T) ([]string, error) {
 	var ids []string
 	for i := range elements {

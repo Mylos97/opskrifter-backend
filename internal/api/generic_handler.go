@@ -22,6 +22,7 @@ type (
 	CrudFunc[T types.Identifiable]    func(T) (string, error)
 	GetFunc[T types.Identifiable]     func(id string) (T, error)
 	GetManyFunc[T types.Identifiable] func(q QueryOptions) ([]T, error)
+	GetAllFunc[T types.Identifiable]  func() ([]T, error)
 )
 
 func HandlerByType[T types.Identifiable](crudFunc CrudFunc[T]) http.HandlerFunc {
@@ -136,6 +137,21 @@ func GetHandlerManyByType[T types.Identifiable](getManyFunc GetManyFunc[T]) http
 		if err == ErrNotValidOrderBy {
 			http.Error(w, "operation failed "+err.Error(), http.StatusBadRequest)
 		}
+		if err != nil {
+			http.Error(w, "operation failed: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(result)
+	}
+}
+
+func GetAllHandlerManyByType[T types.Identifiable](getAllFunc GetAllFunc[T]) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		result, err := getAllFunc()
+
 		if err != nil {
 			http.Error(w, "operation failed: "+err.Error(), http.StatusInternalServerError)
 			return

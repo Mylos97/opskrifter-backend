@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"opskrifter-backend/internal/api"
@@ -12,6 +14,9 @@ import (
 
 func main() {
 	port := os.Getenv("PORT")
+	env := flag.String("env", "dev", "Application environment: dev or prod")
+	flag.Parse()
+	fmt.Printf("Running in %s mode\n", *env)
 
 	err := myDB.Init(false)
 	if err != nil {
@@ -19,7 +24,7 @@ func main() {
 	}
 	r := chi.NewRouter()
 
-	api.RegisterRoutes(r)
+	api.RegisterRoutes(r, *env)
 
 	log.Printf("API server running on http://localhost%s", port)
 	if err := http.ListenAndServe(port, r); err != nil {

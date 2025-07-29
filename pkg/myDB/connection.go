@@ -24,7 +24,6 @@ func Init(inMemory bool) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Current working directory:", cwd)
 
 	DB, err = sqlx.Open("sqlite3", dsn)
 	if err != nil {

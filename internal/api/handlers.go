@@ -19,6 +19,7 @@ var UpdateRecipe = HandlerByType(UpdateByType[types.Recipe])
 var DeleteRecipe = DeleteHandlerByType[types.Recipe](DeleteByType[types.Recipe])
 var GetRecipe = GetHandlerByType(GetByType[types.Recipe])
 var GetManyRecipe = GetHandlerManyByType(GetManyByType[types.Recipe])
+var GetManyIngredients = GetAllHandlerManyByType(GetAllByType[types.Ingredient])
 
 func UnlikeRecipe(w http.ResponseWriter, r *http.Request) {
 	recipeID := chi.URLParam(r, "id")

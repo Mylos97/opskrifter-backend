@@ -254,3 +254,20 @@ func TestRouteUpdateViewsRecipe_Concurrent(t *testing.T) {
 
 	assert.Equal(t, testRecipe.Views+parallelRequests, updated.Views, "expected view count to match number of requests")
 }
+
+func TestGetAllIngredients(t *testing.T) {
+	req := httptest.NewRequest("GET", "/ingredients/", nil)
+	req.Header.Set("Content-Type", "application/json")
+	resp := httptest.NewRecorder()
+
+	testRouter.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusOK, resp.Code, "expected status 201")
+	var data []types.Ingredient
+	err := json.Unmarshal(resp.Body.Bytes(), &data)
+	require.NoError(t, err, "failed to decode response JSON")
+	count, err := GetCountByTable(data[0].TableName())
+	require.NoError(t, err, "failed to get count response JSON")
+
+	assert.Equal(t, len(data), count, "expected ingredient to be the same ")
+}

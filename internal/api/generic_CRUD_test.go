@@ -169,3 +169,15 @@ func TestCreateByTypeWithRelations(t *testing.T) {
 	require.NoError(t, testutils.AssertCountByType[types.Recipe](0, GetCountByType))
 	require.NoError(t, testutils.AssertCountByTable(0, tableName, GetCountByTable), "failed to get the count after deletions")
 }
+
+func TestGetAll(t *testing.T) {
+	ids, err := CreateManyByType(testRecipes)
+	require.NoError(t, err, "error creating ingredients")
+
+	newRecipes, err := GetAllByType[types.Recipe]()
+	require.NoError(t, err, "error getting ingredients")
+	assert.Equal(t, len(newRecipes), len(testRecipes))
+
+	err = DeleteManyByType[types.Recipe](ids)
+	require.NoError(t, err, "error deleting ingredients")
+}
