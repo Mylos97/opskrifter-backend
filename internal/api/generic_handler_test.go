@@ -129,6 +129,9 @@ func TestGetManyHandlerByType(t *testing.T) {
 	require.NoError(t, err, "error decoding response")
 
 	require.Len(t, got, 5, "expected 5 recipes in result")
+	testutils.AssertSortedBy(t, got, func(a, b types.Recipe) bool {
+		return a.Name <= b.Name
+	})
 
 	req = httptest.NewRequest("GET", "/?page=0&per_page=5&order_by=loool", nil)
 	rec = httptest.NewRecorder()

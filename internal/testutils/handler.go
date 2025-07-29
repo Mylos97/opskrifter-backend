@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"opskrifter-backend/internal/types"
 	"reflect"
+	"testing"
 )
 
 func NewJSONPostRequest(data []byte) (*http.Request, *httptest.ResponseRecorder) {
@@ -49,4 +50,12 @@ func EqualByValue[T types.Identifiable](want, got T) error {
 		return fmt.Errorf("structs are not equal\nWant: %+v\nGot:  %+v", want, got)
 	}
 	return nil
+}
+
+func AssertSortedBy[T any](t *testing.T, list []T, less func(a, b T) bool) {
+	for i := 1; i < len(list); i++ {
+		if !less(list[i-1], list[i]) {
+			t.Fatalf("list not sorted at index %d: %v > %v", i, list[i-1], list[i])
+		}
+	}
 }

@@ -28,6 +28,7 @@ var ErrMissingParentOrChild = errors.New("missing parent or child tag in struct"
 var ErrRowsAffectedZero = errors.New("expected affected rows to be 1 got 0")
 var ErrExecutingQuery = errors.New("error executing query")
 var ErrNotValidOrderBy = errors.New("this order by does not exist")
+var ErrNoColumnNamesFound = errors.New("no column names found")
 
 func buildInsertQuery(obj any) (string, []any, string) {
 	v := reflect.ValueOf(obj)
@@ -157,7 +158,6 @@ func buildQueryOneToManyByType[E types.OneToMany](parentID string, elements []E)
 		valueRows = append(valueRows, fmt.Sprintf("(%s)", strings.Join(rowValues, ", ")))
 	}
 
-	// Step 3: Final query
 	query := fmt.Sprintf(
 		"INSERT INTO %s (%s) VALUES %s",
 		relationTable,
@@ -166,4 +166,24 @@ func buildQueryOneToManyByType[E types.OneToMany](parentID string, elements []E)
 	)
 
 	return query, nil
+}
+
+func getColumnNames[E types.OneToMany](element E) ([]string, error) {
+	first := reflect.ValueOf(element)
+	elemType := first.Type()
+	var columnNames []string
+
+	for i := 0; i < elemType.NumField(); i++ {
+		field := elemType.Field(i)
+		dbTag := field.Tag.Get("db")
+		if dbTag != "" {
+			columnNames = append(columnNames, dbTag)
+		}
+	}
+
+	if len(columnNames) == 0 {
+		return nil, ErrNoColumnNamesFound
+	}
+
+	return columnNames, nil
 }

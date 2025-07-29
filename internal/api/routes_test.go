@@ -2,10 +2,13 @@ package api
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"opskrifter-backend/internal/testutils"
 	"opskrifter-backend/internal/types"
 	"testing"
 
@@ -140,4 +143,67 @@ func TestRouteGetManyRecipe(t *testing.T) {
 	require.NoError(t, err, "error decoding response body")
 
 	require.Len(t, got, 2, "expected 2 recipes in result")
+	testutils.AssertSortedBy(t, got, func(a, b types.Recipe) bool {
+		return a.Name <= b.Name
+	})
+}
+
+func TestRouteLikeRecipe(t *testing.T) {
+	id, err := CreateByType(testRecipe)
+	require.NoError(t, err, "error creating recipes")
+
+	defer func() {
+		_, err := DeleteByType[types.Recipe](id)
+		require.NoError(t, err, "error deleting recipes")
+	}()
+
+	body := map[string]string{"user_id": adminUser.ID}
+	bodyBytes, _ := json.Marshal(body)
+
+	req := httptest.NewRequest("POST", fmt.Sprintf("/recipes/%s/like", id), bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	resp := httptest.NewRecorder()
+
+	testRouter.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusCreated, resp.Code, "expected status 201")
+	r, err := GetRelationByType[types.UserLikedRecipe](adminUser.ID, id)
+	require.NoError(t, err, "error getting the relation")
+	assert.Equal(t, r.RecipeID, id)
+	assert.Equal(t, r.UserID, adminUser.ID)
+
+	resp = httptest.NewRecorder()
+	testRouter.ServeHTTP(resp, req)
+	assert.Equal(t, http.StatusBadRequest, resp.Code)
+}
+
+func TestRouteUnLikeRecipe(t *testing.T) {
+	id, err := CreateByType(testRecipe)
+	require.NoError(t, err, "error creating recipes")
+
+	defer func() {
+		_, err := DeleteByType[types.Recipe](id)
+		require.NoError(t, err, "error deleting recipes")
+	}()
+
+	body := map[string]string{"user_id": adminUser.ID}
+	bodyBytes, _ := json.Marshal(body)
+
+	req := httptest.NewRequest("POST", fmt.Sprintf("/recipes/%s/like", id), bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	resp := httptest.NewRecorder()
+
+	testRouter.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusCreated, resp.Code, "expected status 201")
+
+	req = httptest.NewRequest("DELETE", fmt.Sprintf("/recipes/%s/like", id), bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	resp = httptest.NewRecorder()
+
+	testRouter.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusNoContent, resp.Code, "expected status 204")
+	_, err = GetRelationByType[types.UserLikedRecipe](adminUser.ID, id)
+	require.True(t, errors.Is(err, sql.ErrNoRows))
 }

@@ -37,8 +37,8 @@ func (u User) GetID() string   { return u.ID }
 
 // UserLikedRecipe
 type UserLikedRecipe struct {
-	UserID   string `json:"user_id" db:"user_id"`
-	RecipeID string `json:"recipe_id" db:"recipe_id"`
+	UserID   string `json:"user_id" db:"user_id" parent:"true"`
+	RecipeID string `json:"recipe_id" db:"recipe_id" child:"true"`
 }
 
 func (UserLikedRecipe) TableName() string      { return "user_liked_recipes" }

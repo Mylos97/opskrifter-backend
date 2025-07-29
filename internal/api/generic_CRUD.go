@@ -1,6 +1,8 @@
 package api
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"opskrifter-backend/internal/types"
 	"opskrifter-backend/pkg/myDB"
@@ -21,11 +23,24 @@ func DeleteByType[T types.Identifiable](id string) (string, error) {
 	return id, nil
 }
 
-func GetByType[T types.Identifiable](id string) (T, error) {
-	var obj T
-	query := fmt.Sprintf("SELECT * FROM %s WHERE id = ?", obj.TableName())
-	err := myDB.DB.Get(&obj, query, id)
-	return obj, err
+func DeleteRelationByType[R types.OneToMany](parentID string, childID string) error {
+	var r R
+	colNames, err := getColumnNames(r)
+	if err != nil {
+		return err
+	}
+
+	query := fmt.Sprintf("DELETE FROM %s WHERE %s = ? AND %s = ?", r.TableName(), colNames[0], colNames[1])
+	sqlResult, err := myDB.DB.Exec(query, parentID, childID)
+	if err != nil {
+		return fmt.Errorf("failed to delete: %w", err)
+	}
+
+	_, err = sqlResult.RowsAffected()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func CreateByType[T types.Identifiable](obj T) (string, error) {
@@ -84,6 +99,35 @@ func UpdateByType[T types.Identifiable](obj T) (string, error) {
 	}
 
 	return obj.GetID(), err
+}
+
+func GetByType[T types.Identifiable](id string) (T, error) {
+	var obj T
+	query := fmt.Sprintf("SELECT * FROM %s WHERE id = ?", obj.TableName())
+	err := myDB.DB.Get(&obj, query, id)
+	return obj, err
+}
+
+func GetRelationByType[R types.OneToMany](parentID string, childID string) (R, error) {
+	var r R
+	colNames, err := getColumnNames(r)
+	if err != nil {
+		return r, err
+	}
+
+	query := fmt.Sprintf("SELECT * FROM %s WHERE %s = ? AND %s = ?", r.TableName(), colNames[0], colNames[1])
+	fmt.Printf("query %s user id %s recipe id %s", query, parentID, childID)
+	err = myDB.DB.Get(&r, query, parentID, childID)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return r, err
+	}
+
+	if err != nil {
+		return r, fmt.Errorf("failed to get: %w", err)
+	}
+
+	return r, nil
 }
 
 func GetCountByType[T types.Identifiable](obj T) (int, error) {

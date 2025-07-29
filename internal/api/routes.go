@@ -28,5 +28,8 @@ func setupRouter(r *chi.Mux) {
 		r.Get("/", GetManyRecipe)
 		r.Put("/", UpdateRecipe)
 		r.Delete("/{id}", DeleteRecipe)
+
+		r.Post("/{id}/like", LikeRecipe)
+		r.Delete("/{id}/like", UnlikeRecipe)
 	})
 }
