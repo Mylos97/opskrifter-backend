@@ -231,12 +231,12 @@ func CreateOneToManyByType[T types.Identifiable, E types.OneToMany](obj T, id st
 		return nil
 	}
 
-	query, err := buildQueryOneToManyByType(id, elements)
+	query, args, err := buildQueryOneToManyByType(id, elements)
 	if err != nil {
 		return err
 	}
 
-	_, err = myDB.DB.Exec(query)
+	_, err = myDB.DB.Exec(query, args...)
 	if err != nil {
 		return fmt.Errorf("query failed: %w", err)
 	}

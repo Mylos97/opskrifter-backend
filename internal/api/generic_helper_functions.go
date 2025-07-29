@@ -121,13 +121,18 @@ func BuildQuery(tableName string, opts QueryOptions) (string, []any, error) {
 	return query, args, nil
 }
 
-func buildQueryOneToManyByType[E types.OneToMany](parentID string, elements []E) (string, error) {
+func buildQueryOneToManyByType[E types.OneToMany](parentID string, elements []E) (string, []any, error) {
+	if len(elements) == 0 {
+		return "", nil, fmt.Errorf("no elements provided")
+	}
+
 	relationTable := elements[0].TableName()
 	first := reflect.ValueOf(elements[0])
 	elemType := first.Type()
 
 	var columnNames []string
-	var valueRows []string
+	var placeholders []string
+	var args []any
 
 	for i := 0; i < elemType.NumField(); i++ {
 		field := elemType.Field(i)
@@ -139,7 +144,7 @@ func buildQueryOneToManyByType[E types.OneToMany](parentID string, elements []E)
 
 	for _, element := range elements {
 		val := reflect.ValueOf(element)
-		var rowValues []string
+		var rowPlaceholders []string
 
 		for i := 0; i < elemType.NumField(); i++ {
 			field := elemType.Field(i)
@@ -148,25 +153,25 @@ func buildQueryOneToManyByType[E types.OneToMany](parentID string, elements []E)
 				continue
 			}
 
-			fieldValue := val.Field(i)
 			if _, isParent := field.Tag.Lookup("parent"); isParent {
-				rowValues = append(rowValues, fmt.Sprintf("'%s'", parentID))
+				args = append(args, parentID)
 			} else {
-				rowValues = append(rowValues, fmt.Sprintf("'%v'", fieldValue.Interface()))
+				args = append(args, val.Field(i).Interface())
 			}
+
+			rowPlaceholders = append(rowPlaceholders, "?")
 		}
 
-		valueRows = append(valueRows, fmt.Sprintf("(%s)", strings.Join(rowValues, ", ")))
+		placeholders = append(placeholders, fmt.Sprintf("(%s)", strings.Join(rowPlaceholders, ", ")))
 	}
 
 	query := fmt.Sprintf(
 		"INSERT INTO %s (%s) VALUES %s",
 		relationTable,
 		strings.Join(columnNames, ", "),
-		strings.Join(valueRows, ", "),
+		strings.Join(placeholders, ", "),
 	)
-
-	return query, nil
+	return query, args, nil
 }
 
 func getColumnNames[E types.OneToMany](element E) ([]string, error) {
