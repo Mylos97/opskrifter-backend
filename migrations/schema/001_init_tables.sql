@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS recipes (
   description TEXT NOT NULL,
   likes INTEGER DEFAULT 0,
   comments INTEGER DEFAULT 0,
+  views INTEGER DEFAULT 0,
   image TEXT NOT NULL,
   recipe_cuisine TEXT NOT NULL,
   created_at TEXT NOT NULL,

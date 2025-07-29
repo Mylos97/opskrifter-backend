@@ -93,12 +93,33 @@ func UpdateByType[T types.Identifiable](obj T) (string, error) {
 		return "", fmt.Errorf("failed to update: %w", err)
 	}
 
-	rowsAffected, _ := sqlResult.RowsAffected()
-	if rowsAffected != 1 {
-		return "", ErrRowsAffectedZero
+	_, err = sqlResult.RowsAffected()
+	if err != nil {
+		return "", err
 	}
 
 	return obj.GetID(), err
+}
+
+func UpdateCountByType[T types.Identifiable](obj T, updateCol string, delta string) error {
+	id := obj.GetID()
+	if id == "" {
+		return ErrNoIdForType
+	}
+
+	query := fmt.Sprintf("UPDATE %s SET %s = %s %s WHERE id = ?", obj.TableName(), updateCol, updateCol, delta)
+	sqlResult, err := myDB.DB.Exec(query, obj.GetID())
+
+	if err != nil {
+		return fmt.Errorf("failed to update count: %w", err)
+	}
+
+	rowsAffected, _ := sqlResult.RowsAffected()
+	if rowsAffected != 1 {
+		return ErrRowsAffectedZero
+	}
+
+	return nil
 }
 
 func GetByType[T types.Identifiable](id string) (T, error) {
@@ -116,7 +137,6 @@ func GetRelationByType[R types.OneToMany](parentID string, childID string) (R, e
 	}
 
 	query := fmt.Sprintf("SELECT * FROM %s WHERE %s = ? AND %s = ?", r.TableName(), colNames[0], colNames[1])
-	fmt.Printf("query %s user id %s recipe id %s", query, parentID, childID)
 	err = myDB.DB.Get(&r, query, parentID, childID)
 
 	if errors.Is(err, sql.ErrNoRows) {

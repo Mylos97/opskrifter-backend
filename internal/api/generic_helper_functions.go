@@ -29,6 +29,7 @@ var ErrRowsAffectedZero = errors.New("expected affected rows to be 1 got 0")
 var ErrExecutingQuery = errors.New("error executing query")
 var ErrNotValidOrderBy = errors.New("this order by does not exist")
 var ErrNoColumnNamesFound = errors.New("no column names found")
+var ErrNoIdForType = errors.New("no id for type")
 
 func buildInsertQuery(obj any) (string, []any, string) {
 	v := reflect.ValueOf(obj)

@@ -15,9 +15,9 @@ var DB *sqlx.DB
 
 func Init(inMemory bool) error {
 	var err error
-	dsn := "./app.db"
+	dsn := "file:app.db?_fk=on&_journal_mode=WAL"
 	if inMemory {
-		dsn = ":memory:?_fk=on"
+		dsn = "file:sharedmemdb?mode=memory&cache=shared&_fk=on&_journal_mode=WAL"
 	}
 
 	DB, err = sqlx.Open("sqlite3", dsn)

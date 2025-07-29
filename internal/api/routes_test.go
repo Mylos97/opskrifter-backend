@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"opskrifter-backend/internal/testutils"
 	"opskrifter-backend/internal/types"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -167,6 +167,9 @@ func TestRouteLikeRecipe(t *testing.T) {
 	testRouter.ServeHTTP(resp, req)
 
 	assert.Equal(t, http.StatusCreated, resp.Code, "expected status 201")
+	updatedRecipe, err := GetByType[types.Recipe](id)
+	require.NoError(t, err, "error getting the recipe")
+	assert.Equal(t, updatedRecipe.Likes, testRecipe.Likes+1)
 	r, err := GetRelationByType[types.UserLikedRecipe](adminUser.ID, id)
 	require.NoError(t, err, "error getting the relation")
 	assert.Equal(t, r.RecipeID, id)
@@ -203,7 +206,51 @@ func TestRouteUnLikeRecipe(t *testing.T) {
 
 	testRouter.ServeHTTP(resp, req)
 
+	updatedRecipe, err := GetByType[types.Recipe](id)
+	require.NoError(t, err, "error getting the recipe")
+	assert.Equal(t, updatedRecipe.Likes, testRecipe.Likes)
+
 	assert.Equal(t, http.StatusNoContent, resp.Code, "expected status 204")
 	_, err = GetRelationByType[types.UserLikedRecipe](adminUser.ID, id)
-	require.True(t, errors.Is(err, sql.ErrNoRows))
+	require.ErrorIs(t, err, sql.ErrNoRows)
+}
+
+func TestRouteUpdateViewsRecipe_Concurrent(t *testing.T) {
+	id, err := CreateByType(testRecipe)
+	require.NoError(t, err, "error creating recipe")
+
+	defer func() {
+		_, err := DeleteByType[types.Recipe](id)
+		require.NoError(t, err, "error deleting recipe")
+	}()
+
+	const parallelRequests = 1000
+	var wg sync.WaitGroup
+	wg.Add(parallelRequests)
+
+	for range parallelRequests {
+		go func() {
+			defer wg.Done()
+			req := httptest.NewRequest("POST", fmt.Sprintf("/recipes/%s/views", id), nil)
+			req.Header.Set("Content-Type", "application/json")
+			resp := httptest.NewRecorder()
+			testRouter.ServeHTTP(resp, req)
+
+			assert.Equal(t, http.StatusOK, resp.Code)
+		}()
+	}
+
+	wg.Wait()
+
+	req := httptest.NewRequest("GET", fmt.Sprintf("/recipes/%s", id), nil)
+	resp := httptest.NewRecorder()
+	testRouter.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusOK, resp.Code)
+
+	var updated types.Recipe
+	err = json.NewDecoder(resp.Body).Decode(&updated)
+	require.NoError(t, err, "error decoding recipe response")
+
+	assert.Equal(t, testRecipe.Views+parallelRequests, updated.Views, "expected view count to match number of requests")
 }

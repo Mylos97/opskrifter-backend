@@ -8,6 +8,7 @@ type Recipe struct {
 	Description       string `json:"description" db:"description"`
 	Likes             int    `json:"likes" db:"likes"`
 	Comments          int    `json:"comments" db:"comments"`
+	Views             int    `json:"views" db:"views"`
 	Image             string `json:"image" db:"image"`
 	RecipeCuisine     string `json:"recipe_cuisine" db:"recipe_cuisine"`
 	UserID            string `json:"user_id" db:"user_id"`
