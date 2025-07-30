@@ -31,7 +31,7 @@ var ErrNotValidOrderBy = errors.New("this order by does not exist")
 var ErrNoColumnNamesFound = errors.New("no column names found")
 var ErrNoIdForType = errors.New("no id for type")
 
-func buildInsertQuery(obj any) (string, []any, string) {
+func BuildInsertQuery(obj any) (string, []any, string) {
 	v := reflect.ValueOf(obj)
 	t := reflect.TypeOf(obj)
 	columns := []string{}
@@ -65,7 +65,7 @@ func buildInsertQuery(obj any) (string, []any, string) {
 	return query, values, id
 }
 
-func buildUpdateQuery(obj any) (string, []any) {
+func BuildUpdateQuery(obj any) (string, []any) {
 	v := reflect.ValueOf(obj)
 	t := reflect.TypeOf(obj)
 
@@ -121,7 +121,7 @@ func BuildQuery(tableName string, opts QueryOptions) (string, []any, error) {
 	return query, args, nil
 }
 
-func buildQueryOneToManyByType[E types.OneToMany](parentID string, elements []E) (string, []any, error) {
+func BuildQueryOneToManyByType[E types.OneToMany](parentID string, elements []E) (string, []any, error) {
 	if len(elements) == 0 {
 		return "", nil, fmt.Errorf("no elements provided")
 	}
@@ -174,7 +174,7 @@ func buildQueryOneToManyByType[E types.OneToMany](parentID string, elements []E)
 	return query, args, nil
 }
 
-func getColumnNames[E types.OneToMany](element E) ([]string, error) {
+func GetColumnNames[E types.OneToMany](element E) ([]string, error) {
 	first := reflect.ValueOf(element)
 	elemType := first.Type()
 	var columnNames []string

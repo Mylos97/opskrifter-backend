@@ -130,8 +130,10 @@ func TestOneToMany(t *testing.T) {
 
 	tableName := types.RecipeIngredient{}.TableName()
 	expectedLength := len(testIngredients) * len(testRecipes)
-
 	require.NoError(t, testutils.AssertCountByTable(expectedLength, tableName, GetCountByTable), "failed to get the count")
+	recipeIngrdient, err := GetRelationByType[types.RecipeIngredient](recipeIDs[0], ingredientIDs[0])
+	require.NoError(t, err, "error getting recipe ingredient")
+	require.Greater(t, len(recipeIngrdient.Amount), 1, "expecting amount to contain a string")
 	require.NoError(t, DeleteManyByType[types.Recipe](recipeIDs), "error deleting recipes")
 	require.NoError(t, testutils.AssertCountByTable(0, tableName, GetCountByTable), "failed to get the count after deleting recipes")
 	require.NoError(t, DeleteManyByType[types.Ingredient](ingredientIDs), "error deleting ingredients")

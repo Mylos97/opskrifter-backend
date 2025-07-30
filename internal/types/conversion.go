@@ -19,6 +19,7 @@ func ToOneToMany[T Identifiable, R OneToMany](elements []T, parent Identifiable,
 func IngredientToRecipeIngredient(ing Ingredient, rec Identifiable) RecipeIngredient {
 	return RecipeIngredient{
 		RecipeId:     rec.GetID(),
+		Amount:       "10 stk",
 		IngredientId: ing.GetID(),
 	}
 }

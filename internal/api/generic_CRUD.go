@@ -25,7 +25,7 @@ func DeleteByType[T types.Identifiable](id string) (string, error) {
 
 func DeleteRelationByType[R types.OneToMany](parentID string, childID string) error {
 	var r R
-	colNames, err := getColumnNames(r)
+	colNames, err := GetColumnNames(r)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func DeleteRelationByType[R types.OneToMany](parentID string, childID string) er
 }
 
 func CreateByType[T types.Identifiable](obj T) (string, error) {
-	query, args, id := buildInsertQuery(obj)
+	query, args, id := BuildInsertQuery(obj)
 	result, err := myDB.DB.Exec(query, args...)
 	if err != nil {
 		return "", fmt.Errorf("failed to execute insert: %w (query: %q)", err, query)
@@ -86,7 +86,7 @@ func CreateByTypeWithRelations[T types.IdentifiableWithRelations](obj T) (string
 }
 
 func UpdateByType[T types.Identifiable](obj T) (string, error) {
-	query, args := buildUpdateQuery(obj)
+	query, args := BuildUpdateQuery(obj)
 	sqlResult, err := myDB.DB.Exec(query, args...)
 
 	if err != nil {
@@ -131,7 +131,7 @@ func GetByType[T types.Identifiable](id string) (T, error) {
 
 func GetRelationByType[R types.OneToMany](parentID string, childID string) (R, error) {
 	var r R
-	colNames, err := getColumnNames(r)
+	colNames, err := GetColumnNames(r)
 	if err != nil {
 		return r, err
 	}
@@ -231,7 +231,7 @@ func CreateOneToManyByType[T types.Identifiable, E types.OneToMany](obj T, id st
 		return nil
 	}
 
-	query, args, err := buildQueryOneToManyByType(id, elements)
+	query, args, err := BuildQueryOneToManyByType(id, elements)
 	if err != nil {
 		return err
 	}
