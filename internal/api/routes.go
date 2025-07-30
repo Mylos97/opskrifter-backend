@@ -11,6 +11,9 @@ import (
 
 func RegisterRoutes(r *chi.Mux, env string) {
 
+	r.Use(middleware.ValidateJSONMiddleware)
+	r.Use(middleware.RejectSQLInjection)
+
 	if env == "prod" {
 		r.Use(httprate.LimitByIP(20, 1*time.Minute))
 		r.Use(middleware.APIKeyAuth)
