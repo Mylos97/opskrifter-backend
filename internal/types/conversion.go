@@ -1,14 +1,14 @@
 package types
 
-func ToInterfaceSlice[T OneToMany](slice []T) []OneToMany {
-	result := make([]OneToMany, len(slice))
+func ToInterfaceSlice[T ManyToMany](slice []T) []ManyToMany {
+	result := make([]ManyToMany, len(slice))
 	for i, v := range slice {
 		result[i] = v
 	}
 	return result
 }
 
-func ToOneToMany[T Identifiable, R OneToMany](elements []T, parent Identifiable, factory func(T, Identifiable) R) []R {
+func ToOneToMany[T Identifiable, R ManyToMany](elements []T, parent Identifiable, factory func(T, Identifiable) R) []R {
 	result := make([]R, 0, len(elements))
 	for _, e := range elements {
 		result = append(result, factory(e, parent))

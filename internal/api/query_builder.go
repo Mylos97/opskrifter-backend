@@ -121,7 +121,7 @@ func BuildQuery(tableName string, opts QueryOptions) (string, []any, error) {
 	return query, args, nil
 }
 
-func BuildQueryOneToManyByType[E types.OneToMany](parentID string, elements []E) (string, []any, error) {
+func BuildQueryOneToManyByType[E types.ManyToMany](parentID string, elements []E) (string, []any, error) {
 	if len(elements) == 0 {
 		return "", nil, fmt.Errorf("no elements provided")
 	}
@@ -174,7 +174,7 @@ func BuildQueryOneToManyByType[E types.OneToMany](parentID string, elements []E)
 	return query, args, nil
 }
 
-func GetColumnNames[E types.OneToMany](element E) ([]string, error) {
+func GetColumnNames[E types.ManyToMany](element E) ([]string, error) {
 	first := reflect.ValueOf(element)
 	elemType := first.Type()
 	var columnNames []string

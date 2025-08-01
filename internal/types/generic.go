@@ -5,16 +5,16 @@ type Identifiable interface {
 	TableName() string
 }
 
-type HasOneToMany interface {
-	GetOneToMany() [][]OneToMany
+type HasManyToMany interface {
+	GetManyToMany() [][]ManyToMany
 }
 
-type OneToMany interface {
+type ManyToMany interface {
 	GetChildID() string
 	TableName() string
 }
 
 type IdentifiableWithRelations interface {
 	Identifiable
-	HasOneToMany
+	HasManyToMany
 }

@@ -18,8 +18,8 @@ type Recipe struct {
 
 func (Recipe) TableName() string { return "recipes" }
 func (r Recipe) GetID() string   { return r.ID }
-func (r Recipe) GetOneToMany() [][]OneToMany {
-	parts := [][]OneToMany{}
+func (r Recipe) GetManyToMany() [][]ManyToMany {
+	parts := [][]ManyToMany{}
 	parts = append(parts, ToInterfaceSlice(r.RecipeIngredients))
 	return parts
 }

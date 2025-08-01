@@ -44,6 +44,13 @@ CREATE TABLE IF NOT EXISTS ingredients_for_recipe (
   FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS recipe_steps (
+  id TEXT PRIMARY KEY NOT NULL,
+  recipe_id TEXT NOT NULL,
+  step TEXT NOT NULL,
+  FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
+);
+
 -- +goose Down
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS recipes;
