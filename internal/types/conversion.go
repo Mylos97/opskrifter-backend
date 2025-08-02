@@ -8,6 +8,14 @@ func ToInterfaceSlice[T ManyToMany](slice []T) []ManyToMany {
 	return result
 }
 
+func ToList[E OneToMany](slice []E) []OneToMany {
+	result := make([]OneToMany, len(slice))
+	for i, v := range slice {
+		result[i] = v
+	}
+	return result
+}
+
 func ToOneToMany[T Identifiable, R ManyToMany](elements []T, parent Identifiable, factory func(T, Identifiable) R) []R {
 	result := make([]R, 0, len(elements))
 	for _, e := range elements {

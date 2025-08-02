@@ -73,10 +73,19 @@ func CreateByTypeWithRelations[T types.IdentifiableWithRelations](obj T) (string
 		return "", fmt.Errorf("error generating id")
 	}
 
-	relations := obj.GetManyToMany()
+	manyrelations := obj.GetManyToMany()
 
-	for i := range relations {
-		err = CreateOneToManyByType(obj, id, relations[i])
+	for i := range manyrelations {
+		err = CreateManyToManyByType(id, manyrelations[i])
+		if err != nil {
+			return "", err
+		}
+	}
+
+	onerelations := obj.GetOneToMany()
+
+	for i := range onerelations {
+		err = CreateManyToManyByType("", onerelations[i])
 		if err != nil {
 			return "", err
 		}
@@ -226,12 +235,12 @@ func DeleteManyByType[T types.Identifiable](ids []string) error {
 	return nil
 }
 
-func CreateOneToManyByType[T types.Identifiable, E types.ManyToMany](obj T, id string, elements []E) error {
+func CreateManyToManyByType[E types.OneToMany](parentID string, elements []E) error {
 	if len(elements) == 0 {
 		return nil
 	}
 
-	query, args, err := BuildQueryOneToManyByType(id, elements)
+	query, args, err := BuildQueryRelationsByType(parentID, elements)
 	if err != nil {
 		return err
 	}

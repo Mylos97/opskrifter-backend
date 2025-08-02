@@ -70,7 +70,7 @@ func LikeRecipe(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	err := CreateOneToManyByType(recipe, body.UserID, relations)
+	err := CreateManyToManyByType(body.UserID, relations)
 
 	if err != nil {
 		http.Error(w, "could not like recipe: "+err.Error(), http.StatusInternalServerError)

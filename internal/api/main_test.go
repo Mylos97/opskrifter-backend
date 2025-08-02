@@ -22,10 +22,12 @@ var adminUser = types.User{
 var (
 	recipeGenerator     *testutils.TestDataGenerator[types.Recipe]
 	ingredientGenerator *testutils.TestDataGenerator[types.Ingredient]
+	recipeStepGenerator *testutils.TestDataGenerator[types.RecipeStep]
 	testRecipe          types.Recipe
 	handlerRecipe       types.Recipe
 	testRecipes         []types.Recipe
 	testIngredients     []types.Ingredient
+	testSteps           []types.RecipeStep
 	testRouter          http.Handler
 	amount              int
 )
@@ -52,12 +54,13 @@ func setupTestData() {
 	amount = 10
 	recipeGenerator = testutils.NewTestDataGenerator[types.Recipe](adminUser.ID)
 	ingredientGenerator = testutils.NewTestDataGenerator[types.Ingredient](adminUser.ID)
-
+	recipeStepGenerator = testutils.NewTestDataGenerator[types.RecipeStep](adminUser.ID)
 	testRecipe = recipeGenerator.Generate()
 	testRecipes = recipeGenerator.GenerateMany(amount)
 	handlerRecipe = recipeGenerator.Generate()
-
+	testSteps = recipeStepGenerator.GenerateMany(amount)
 	testIngredients = ingredientGenerator.GenerateMany(amount)
+
 	r := chi.NewRouter()
 	setupRouter(r)
 	testRouter = r

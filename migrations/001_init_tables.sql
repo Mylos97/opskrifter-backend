@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS recipe_steps (
   id TEXT PRIMARY KEY NOT NULL,
   recipe_id TEXT NOT NULL,
   step TEXT NOT NULL,
-  FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
+  FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
 );
 
 -- +goose Down
@@ -57,3 +57,4 @@ DROP TABLE IF EXISTS recipes;
 DROP TABLE IF EXISTS user_liked_recipe;
 DROP TABLE IF EXISTS ingredients_for_recipe;
 DROP TABLE IF EXISTS ingredients;
+DROP TABLE IF EXISTS recipe_steps;

@@ -121,7 +121,7 @@ func BuildQuery(tableName string, opts QueryOptions) (string, []any, error) {
 	return query, args, nil
 }
 
-func BuildQueryOneToManyByType[E types.ManyToMany](parentID string, elements []E) (string, []any, error) {
+func BuildQueryRelationsByType[E types.OneToMany](parentID string, elements []E) (string, []any, error) {
 	if len(elements) == 0 {
 		return "", nil, fmt.Errorf("no elements provided")
 	}
@@ -130,16 +130,11 @@ func BuildQueryOneToManyByType[E types.ManyToMany](parentID string, elements []E
 	first := reflect.ValueOf(elements[0])
 	elemType := first.Type()
 
-	var columnNames []string
 	var placeholders []string
 	var args []any
-
-	for i := 0; i < elemType.NumField(); i++ {
-		field := elemType.Field(i)
-		dbTag := field.Tag.Get("db")
-		if dbTag != "" {
-			columnNames = append(columnNames, dbTag)
-		}
+	columnNames, err := GetColumnNames(elements[0])
+	if err != nil {
+		return "", nil, err
 	}
 
 	for _, element := range elements {
@@ -155,6 +150,9 @@ func BuildQueryOneToManyByType[E types.ManyToMany](parentID string, elements []E
 
 			if _, isParent := field.Tag.Lookup("parent"); isParent {
 				args = append(args, parentID)
+			} else if dbTag == "id" {
+				id := uuid.New().String()
+				args = append(args, id)
 			} else {
 				args = append(args, val.Field(i).Interface())
 			}
@@ -174,7 +172,7 @@ func BuildQueryOneToManyByType[E types.ManyToMany](parentID string, elements []E
 	return query, args, nil
 }
 
-func GetColumnNames[E types.ManyToMany](element E) ([]string, error) {
+func GetColumnNames[E any](element E) ([]string, error) {
 	first := reflect.ValueOf(element)
 	elemType := first.Type()
 	var columnNames []string

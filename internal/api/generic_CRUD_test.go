@@ -124,7 +124,7 @@ func TestOneToMany(t *testing.T) {
 			testRecipes[i],
 			types.IngredientToRecipeIngredient,
 		)
-		err = CreateOneToManyByType(testRecipes[i], testRecipes[i].ID, recipeIngredients)
+		err = CreateManyToManyByType(testRecipes[i].ID, recipeIngredients)
 		require.NoErrorf(t, err, "failed to insert relations at index %d (Recipe ID: %s)", i, testRecipes[i].ID)
 	}
 

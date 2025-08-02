@@ -14,6 +14,7 @@ type Recipe struct {
 	UserID            string `json:"user_id" db:"user_id"`
 	CreatedAt         string `json:"created_at" db:"created_at"`
 	RecipeIngredients []RecipeIngredient
+	RecipeSteps       []RecipeStep
 }
 
 func (Recipe) TableName() string { return "recipes" }
@@ -21,6 +22,12 @@ func (r Recipe) GetID() string   { return r.ID }
 func (r Recipe) GetManyToMany() [][]ManyToMany {
 	parts := [][]ManyToMany{}
 	parts = append(parts, ToInterfaceSlice(r.RecipeIngredients))
+	return parts
+}
+
+func (r Recipe) GetOneToMany() [][]OneToMany {
+	parts := [][]OneToMany{}
+	parts = append(parts, ToList(r.RecipeSteps))
 	return parts
 }
 
@@ -63,3 +70,13 @@ type RecipeIngredient struct {
 
 func (RecipeIngredient) TableName() string     { return "ingredients_for_recipe" }
 func (ri RecipeIngredient) GetChildID() string { return ri.IngredientId }
+
+// RecipeStep
+type RecipeStep struct {
+	ID       string `json:"id" db:"id"`
+	RecipeID string `json:"recipe_id" db:"recipe_id"`
+	Step     string `json:"step" db:"step"`
+}
+
+func (RecipeStep) TableName() string { return "recipe_steps" }
+func (rs RecipeStep) GetID() string  { return rs.ID }
